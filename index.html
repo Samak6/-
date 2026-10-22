@@ -1,0 +1,2062 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>药理学考研 · 模考答卷台与试卷批注系统</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-elevated: #1c2128;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --text-strong: #f0f6fc;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-hover: #79c0ff;
+    --success: #3fb950;
+    --danger: #f85149;
+    --warning: #d29922;
+    --radius: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* 顶部导航 */
+  header {
+    flex-shrink: 0;
+    height: 50px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-strong);
+  }
+
+  /* 模式切换胶囊 */
+  .mode-tabs {
+    display: inline-flex;
+    background: #090d13;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+  }
+  .mode-tab {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 4px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mode-tab:hover {
+    color: var(--text-strong);
+  }
+  .mode-tab.active {
+    background: #1f6feb;
+    color: #fff;
+  }
+  .mode-tab.active-anno {
+    background: #da3633;
+    color: #fff;
+  }
+  .tab-badge {
+    font-size: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 1px 5px;
+    border-radius: 10px;
+    font-weight: 700;
+  }
+
+  .header-center {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 13px;
+    color: var(--text-strong);
+  }
+  .timer-val {
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+  .timer-overtime {
+    color: var(--danger) !important;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+  }
+  .timer-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 4px;
+  }
+  .timer-btn:hover { color: var(--text-strong); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text-strong);
+    padding: 5px 12px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn:hover {
+    border-color: var(--text-muted);
+  }
+  .btn-primary {
+    background: #238636;
+    border-color: rgba(240, 246, 252, 0.1);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: #2ea043;
+  }
+  .btn-accent {
+    background: #1f6feb;
+    border-color: rgba(240, 246, 252, 0.1);
+    color: #fff;
+  }
+  .btn-accent:hover {
+    background: #388bfd;
+  }
+  .btn-danger-soft {
+    background: rgba(248, 81, 73, 0.14);
+    border-color: rgba(248, 81, 73, 0.4);
+    color: #ff7b72;
+  }
+  .btn-danger-soft:hover {
+    background: rgba(248, 81, 73, 0.25);
+  }
+  .btn-active-toggle {
+    background: rgba(210, 153, 34, 0.2);
+    border-color: var(--warning);
+    color: #e3b341;
+  }
+
+  /* ==================== 模式一：作答台主体 ==================== */
+  .container {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* 左侧：试卷区域 */
+  .panel-left {
+    flex: 1;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-bar {
+    height: 38px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: rgba(22, 27, 34, 0.5);
+  }
+  .panel-bar-tools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .paper-editor {
+    flex: 1;
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 16px;
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+  }
+  .paper-preview {
+    flex: 1;
+    padding: 18px 22px;
+    overflow-y: auto;
+    font-size: 13.5px;
+    line-height: 1.65;
+    display: none;
+  }
+  .paper-preview h1 { font-size: 16px; color: var(--text-strong); margin-bottom: 12px; }
+  .paper-preview h2 { font-size: 14px; color: var(--accent); margin: 16px 0 8px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  .paper-preview h3 { font-size: 13.5px; color: var(--text-strong); margin: 14px 0 6px; }
+  .paper-preview blockquote {
+    border-left: 3px solid var(--accent);
+    background: rgba(88, 166, 255, 0.08);
+    padding: 6px 12px;
+    margin: 8px 0;
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+  }
+  .paper-preview code {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    color: #79c0ff;
+    background: rgba(56, 139, 253, 0.15);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12.5px;
+  }
+
+  /* 右侧：纯净答卷区域 */
+  .panel-right {
+    flex: 1.1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #090d13;
+  }
+  .answers-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .q-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .q-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-strong);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(48, 54, 61, 0.6);
+  }
+  .q-score {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: normal;
+  }
+
+  .mcq-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .mcq-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mcq-item-num {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .mcq-btn-group {
+    display: flex;
+    gap: 3px;
+  }
+  .opt-btn {
+    width: 22px;
+    height: 22px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+  }
+  .opt-btn:hover { color: var(--text-strong); border-color: var(--text-muted); }
+  .opt-btn.active {
+    background: var(--accent);
+    color: #0d1117;
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+
+  .q-input-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .q-input-label {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .text-box {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-strong);
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 8px 10px;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  .text-box:focus {
+    border-color: var(--accent);
+  }
+
+  .panel-bottom-bar {
+    height: 42px;
+    padding: 0 16px;
+    border-top: 1px solid var(--border);
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+
+  /* ==================== 模式二：🖍️ 试卷批注复盘视图 ==================== */
+  .anno-container {
+    flex: 1;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    background: #0b0f15;
+  }
+  .anno-toolbar {
+    flex-shrink: 0;
+    height: 46px;
+    background: #121720;
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .anno-select {
+    background: var(--panel);
+    color: var(--text-strong);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 5px 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    min-width: 320px;
+  }
+  .anno-select:focus { border-color: var(--accent); }
+
+  .anno-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .anno-paper {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding-bottom: 40px;
+  }
+
+  /* 1. 仿真卷头统分卡 */
+  .paper-header-card {
+    background: linear-gradient(135deg, #161b22 0%, #1a1f29 100%);
+    border: 1px solid var(--border);
+    border-top: 3px solid #f85149;
+    border-radius: 8px;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 24px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    position: relative;
+  }
+  .ph-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .ph-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ph-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-strong);
+  }
+  .ph-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .ph-comment {
+    background: rgba(248, 81, 73, 0.08);
+    border-left: 3px solid #f85149;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #e6edf3;
+  }
+
+  /* 仿真红色试卷统分格 */
+  .score-stamp-box {
+    flex-shrink: 0;
+    width: 380px;
+    border: 2px solid rgba(248, 81, 73, 0.65);
+    border-radius: 6px;
+    background: rgba(248, 81, 73, 0.04);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+  }
+  .stamp-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(248, 81, 73, 0.3);
+  }
+  .stamp-total-label {
+    font-size: 12px;
+    color: #ff7b72;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .stamp-total-num {
+    font-family: "Georgia", "Times New Roman", serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: #ff7b72;
+    line-height: 1;
+    text-shadow: 0 2px 10px rgba(248, 81, 73, 0.3);
+  }
+  .stamp-total-max {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: normal;
+  }
+  .stamp-closed-note {
+    padding: 5px 14px;
+    background: rgba(210, 153, 34, 0.15);
+    color: #e3b341;
+    font-size: 11.5px;
+    border-bottom: 1px solid rgba(248, 81, 73, 0.25);
+  }
+  .stamp-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    text-align: center;
+    font-size: 11.5px;
+  }
+  .stamp-cell {
+    padding: 6px 4px;
+    border-right: 1px solid rgba(248, 81, 73, 0.25);
+  }
+  .stamp-cell:last-child { border-right: none; }
+  .stamp-cell-hd {
+    color: var(--text-muted);
+    font-size: 10.5px;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .stamp-cell-val {
+    font-weight: 700;
+    color: var(--text-strong);
+    font-family: ui-monospace, SFMono-Regular, monospace;
+  }
+
+  /* 2. 顽固复发错题红牌警告区 */
+  .repeat-alert-card {
+    background: rgba(248, 81, 73, 0.07);
+    border: 1px solid rgba(248, 81, 73, 0.45);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+  .repeat-alert-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ff7b72;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .repeat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+    gap: 12px;
+  }
+  .repeat-item {
+    background: rgba(13, 17, 23, 0.75);
+    border: 1px solid rgba(248, 81, 73, 0.3);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+  .repeat-item-hd {
+    font-weight: 700;
+    color: #ffa198;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .repeat-cmp {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+  }
+  .repeat-fix {
+    background: rgba(63, 185, 80, 0.1);
+    border-left: 3px solid var(--success);
+    padding: 6px 10px;
+    color: #7ee787;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  /* 3. 题型大分区块 */
+  .anno-sec-block {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .anno-sec-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #161b22;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 6px;
+  }
+  .anno-sec-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text-strong);
+  }
+  .anno-sec-score {
+    font-size: 13px;
+    font-weight: 700;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    color: #ff7b72;
+  }
+
+  /* 单道主观题：左右双栏批注卡片（左：考生原答+行内红绿批注；右：官方采分点 Checklist） */
+  .q-anno-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .q-anno-card.full-marks {
+    border-color: rgba(63, 185, 80, 0.4);
+  }
+  .q-anno-top {
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .q-anno-stem {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-strong);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .q-tag {
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .q-tag.warn { background: rgba(248, 81, 73, 0.2); color: #ff7b72; border: 1px solid rgba(248, 81, 73, 0.4); }
+  .q-tag.info { background: rgba(210, 153, 34, 0.2); color: #e3b341; border: 1px solid rgba(210, 153, 34, 0.4); }
+  .q-tag.good { background: rgba(63, 185, 80, 0.2); color: #7ee787; border: 1px solid rgba(63, 185, 80, 0.4); }
+
+  .q-score-pill {
+    flex-shrink: 0;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(248, 81, 73, 0.5);
+    color: #ff7b72;
+    background: rgba(248, 81, 73, 0.1);
+  }
+  .q-score-pill.pass {
+    border-color: rgba(63, 185, 80, 0.5);
+    color: #7ee787;
+    background: rgba(63, 185, 80, 0.1);
+  }
+
+  .q-anno-body {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    divide-x: 1px solid var(--border);
+  }
+  .q-col-student {
+    padding: 14px 18px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .q-col-rubric {
+    padding: 14px 18px;
+    background: rgba(13, 17, 23, 0.45);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .col-sub-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* 考生作答行内红绿批注样式（核心体验！） */
+  .student-ans-box {
+    font-size: 13.5px;
+    line-height: 2.05;
+    color: #e6edf3;
+    background: #0d1117;
+    border: 1px solid rgba(48, 54, 61, 0.8);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .anno-ok {
+    background: rgba(46, 160, 67, 0.14);
+    border-bottom: 2px solid #3fb950;
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+  .anno-err {
+    background: rgba(248, 81, 73, 0.16);
+    border-bottom: 2px wavy #f85149;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #ffdcd7;
+  }
+  .anno-warn {
+    background: rgba(210, 153, 34, 0.16);
+    border-bottom: 2px dashed #d29922;
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+  .anno-miss {
+    display: inline-block;
+    background: rgba(248, 81, 73, 0.1);
+    border: 1px dashed rgba(248, 81, 73, 0.55);
+    color: #ff7b72;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 2px 0;
+  }
+  .anno-badge {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin: 0 4px;
+    vertical-align: baseline;
+  }
+  .anno-badge.ok {
+    background: #238636;
+    color: #fff;
+  }
+  .anno-badge.err {
+    background: #da3633;
+    color: #fff;
+  }
+  .anno-badge.warn {
+    background: #9e6a03;
+    color: #fff;
+  }
+
+  /* 右侧官方采分点 Checklist */
+  .rubric-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .rubric-item {
+    font-size: 12.5px;
+    line-height: 1.55;
+    padding: 7px 10px;
+    border-radius: 5px;
+    background: rgba(22, 27, 34, 0.8);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .rubric-item.missed {
+    border-color: rgba(248, 81, 73, 0.45);
+    background: rgba(248, 81, 73, 0.06);
+  }
+  .rubric-item.hit {
+    border-color: rgba(63, 185, 80, 0.35);
+  }
+  .rubric-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .rubric-text {
+    flex: 1;
+    white-space: pre-line;
+  }
+
+  /* 遮挡自测模糊模式 */
+  body.mask-rubric .rubric-text,
+  body.mask-rubric .essay-kp-cell {
+    filter: blur(6px);
+    user-select: none;
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  body.mask-rubric .rubric-text:hover,
+  body.mask-rubric .essay-kp-cell:hover,
+  body.mask-rubric .rubric-text.revealed,
+  body.mask-rubric .essay-kp-cell.revealed {
+    filter: none;
+  }
+
+  /* 单选题原位批注网格 */
+  .mcq-anno-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .mcq-anno-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mcq-anno-card.wrong {
+    border-color: rgba(248, 81, 73, 0.65);
+    background: rgba(248, 81, 73, 0.04);
+  }
+  .mcq-anno-opts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    font-size: 12.5px;
+  }
+  .mcq-opt-pill {
+    padding: 5px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: #0d1117;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .mcq-opt-pill.correct-opt {
+    border-color: var(--success);
+    background: rgba(63, 185, 80, 0.14);
+    color: #7ee787;
+    font-weight: 600;
+  }
+  .mcq-opt-pill.wrong-opt {
+    border-color: var(--danger);
+    background: rgba(248, 81, 73, 0.18);
+    color: #ff7b72;
+    text-decoration: line-through;
+  }
+  .mcq-anno-note {
+    font-size: 12px;
+    line-height: 1.55;
+    padding: 8px 10px;
+    border-radius: 4px;
+    background: rgba(13, 17, 23, 0.7);
+    border-left: 3px solid var(--accent);
+    color: var(--text);
+  }
+  .mcq-anno-card.wrong .mcq-anno-note {
+    border-left-color: var(--danger);
+    background: rgba(248, 81, 73, 0.1);
+    color: #ffdcd7;
+  }
+
+  /* 论述题采分矩阵表 */
+  .essay-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin-top: 6px;
+  }
+  .essay-table th, .essay-table td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.55;
+  }
+  .essay-table th {
+    background: #0d1117;
+    color: var(--text-strong);
+    font-weight: 600;
+  }
+
+  /* 考生疑点便签墙 */
+  .doubts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 12px;
+  }
+  .doubt-note {
+    background: rgba(210, 153, 34, 0.07);
+    border: 1px solid rgba(210, 153, 34, 0.4);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .doubt-q {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e3b341;
+  }
+  .doubt-a {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #e6edf3;
+    white-space: pre-line;
+  }
+
+  /* 复盘回马枪自测闪卡 */
+  .flashcard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 12px;
+  }
+  .flashcard {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .fc-q {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-strong);
+    line-height: 1.55;
+  }
+  .fc-a {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #7ee787;
+    background: rgba(63, 185, 80, 0.08);
+    border: 1px dashed rgba(63, 185, 80, 0.4);
+    padding: 10px 12px;
+    border-radius: 6px;
+    white-space: pre-line;
+    display: none;
+  }
+  .flashcard.open .fc-a {
+    display: block;
+  }
+
+  /* Toast 提示 */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(40px);
+    background: #21262d;
+    border: 1px solid var(--border);
+    color: var(--text-strong);
+    padding: 7px 16px;
+    border-radius: var(--radius);
+    font-size: 12.5px;
+    opacity: 0;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    z-index: 999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  @media (max-width: 900px) {
+    .container { flex-direction: column; }
+    .panel-left { height: 42vh; border-right: none; border-bottom: 1px solid var(--border); }
+    .mcq-row { grid-template-columns: repeat(2, 1fr); }
+    .paper-header-card { flex-direction: column; }
+    .score-stamp-box { width: 100%; }
+    .q-anno-body { grid-template-columns: 1fr; }
+    .q-col-student { border-right: none; border-bottom: 1px solid var(--border); }
+    .mcq-anno-grid { grid-template-columns: 1fr; }
+  }
+</style>
+<!-- 自动载入本地归档批注数据库（支持 file:// 协议与 Web 托管读取，含英文镜像兜底） -->
+<script src="模考归档/grading_data.js"></script>
+<script>
+  if (!window.GRADING_HISTORY || !window.GRADING_HISTORY.length) {
+    document.write('<script src="archive/grading_data.js"><\/script>');
+  }
+</script>
+</head>
+<body>
+
+  <!-- 顶部导航 -->
+  <header>
+    <div class="header-left">
+      <span class="header-title">药理学考研工作台</span>
+      <div class="mode-tabs">
+        <button class="mode-tab" id="tabExamBtn" onclick="switchAppMode('exam')">
+          ✍️ 实战作答台
+        </button>
+        <button class="mode-tab active-anno" id="tabAnnoBtn" onclick="switchAppMode('anno')">
+          🖍️ 试卷批注复盘 <span class="tab-badge" id="annoCountBadge">2</span>
+        </button>
+      </div>
+      <button class="btn" id="resetExamBtn" style="padding:2px 8px; font-size:11px; display:none;" onclick="resetAll()">清空重置</button>
+    </div>
+
+    <!-- 倒计时（仅在作答模式显示） -->
+    <div class="header-center" id="examTimerBar" style="display:none;">
+      <span>⏱️</span>
+      <span id="timerText" class="timer-val">35:00</span>
+      <button class="timer-btn" onclick="toggleTimer()" id="timerToggleBtn">暂停</button>
+      <button class="timer-btn" onclick="resetTimer()">重置时间</button>
+    </div>
+
+    <!-- 批注模式快捷提示（仅在批注模式显示） -->
+    <div class="header-center" id="annoTopHint" style="font-size:12px; color:var(--text-muted);">
+      <span>💡 红底波浪线 = 错因定位 · 绿底实线 = 命中采分点 · 橙色虚线 = 漏答盲区</span>
+    </div>
+
+    <div class="header-right">
+      <button class="btn btn-primary" id="copyCardBtn" style="display:none;" onclick="copyGradingCard()">📋 复制答题卡交卷</button>
+      <button class="btn btn-accent" id="retakePaperBtn" onclick="retakeCurrentAnnotatedPaper()">🔄 将本卷原题载入作答台二刷</button>
+    </div>
+  </header>
+
+  <!-- ==================== 模式一：实战作答台 ==================== -->
+  <div class="container" id="examViewContainer" style="display:none;">
+
+    <!-- 左侧：试卷区域 -->
+    <div class="panel-left">
+      <div class="panel-bar">
+        <span>试卷视窗</span>
+        <div class="panel-bar-tools">
+          <button class="btn btn-accent" style="padding:2px 8px; font-size:11px;" onclick="pastePaperFromClipboard()">📋 一键粘贴并预览</button>
+          <button class="btn" style="padding:2px 8px; font-size:11px;" id="viewToggleBtn" onclick="togglePaperMode()">编辑模式</button>
+          <button class="btn" style="padding:2px 8px; font-size:11px;" onclick="clearPaper()">清空</button>
+        </div>
+      </div>
+      <textarea id="paperEditor" class="paper-editor" placeholder="在此处粘贴 AI 出好的试卷 Markdown 文本...&#10;&#10;（推荐直接点击上方【📋 一键粘贴并预览】快速读取剪贴板）" oninput="savePaper(this.value)"></textarea>
+      <div id="paperPreview" class="paper-preview"></div>
+    </div>
+
+    <!-- 右侧：通用 75 分制答题输入 -->
+    <div class="panel-right">
+      <div class="answers-scroll">
+
+        <!-- 一、英文专业词汇与名词解释 (15分) -->
+        <div class="q-section">
+          <div class="q-title">
+            <span>一、英文专业词汇与名词解释</span>
+            <span class="q-score">5题 · 15分（每题3分）</span>
+          </div>
+          <div class="q-input-wrap">
+            <span class="q-input-label" id="label_vocab1">第 1 题作答：</span>
+            <textarea id="ans_vocab1" class="text-box" style="height:56px;" oninput="onInput('vocab1', this.value)"></textarea>
+          </div>
+          <div class="q-input-wrap">
+            <span class="q-input-label" id="label_vocab2">第 2 题作答：</span>
+            <textarea id="ans_vocab2" class="text-box" style="height:56px;" oninput="onInput('vocab2', this.value)"></textarea>
+          </div>
+          <div class="q-input-wrap">
+            <span class="q-input-label" id="label_vocab3">第 3 题作答：</span>
+            <textarea id="ans_vocab3" class="text-box" style="height:56px;" oninput="onInput('vocab3', this.value)"></textarea>
+          </div>
+          <div class="q-input-wrap">
+            <span class="q-input-label" id="label_vocab4">第 4 题作答：</span>
+            <textarea id="ans_vocab4" class="text-box" style="height:56px;" oninput="onInput('vocab4', this.value)"></textarea>
+          </div>
+          <div class="q-input-wrap">
+            <span class="q-input-label" id="label_vocab5">第 5 题作答：</span>
+            <textarea id="ans_vocab5" class="text-box" style="height:56px;" oninput="onInput('vocab5', this.value)"></textarea>
+          </div>
+        </div>
+
+        <!-- 二、单项选择题 (16分) -->
+        <div class="q-section">
+          <div class="q-title">
+            <span>二、单项选择题</span>
+            <span class="q-score">8题 · 16分（每题2分）</span>
+          </div>
+          <div class="mcq-row" id="mcqRow"></div>
+        </div>
+
+        <!-- 三、简答题 (20分) -->
+        <div class="q-section">
+          <div class="q-title">
+            <span>三、简答题</span>
+            <span class="q-score">2题 · 20分（每题10分）</span>
+          </div>
+          <div class="q-input-wrap">
+            <span class="q-input-label" id="label_saq1">第 1 题作答：</span>
+            <textarea id="ans_saq1" class="text-box" style="height:100px;" oninput="onInput('saq1', this.value)"></textarea>
+          </div>
+          <div class="q-input-wrap">
+            <span class="q-input-label" id="label_saq2">第 2 题作答：</span>
+            <textarea id="ans_saq2" class="text-box" style="height:100px;" oninput="onInput('saq2', this.value)"></textarea>
+          </div>
+        </div>
+
+        <!-- 四、综合论述题 (24分) -->
+        <div class="q-section">
+          <div class="q-title">
+            <span>四、综合论述题</span>
+            <span class="q-score">1题 · 24分</span>
+          </div>
+          <div class="q-input-wrap">
+            <span class="q-input-label" id="label_essay">论述题作答：</span>
+            <textarea id="ans_essay" class="text-box" style="height:150px;" oninput="onInput('essay', this.value)"></textarea>
+          </div>
+        </div>
+
+        <!-- 五、考生疑点 / 蒙题标记 / 盲区备注 (选填) -->
+        <div class="q-section" style="border-top:1px dashed var(--border); padding-top:10px;">
+          <div class="q-title" style="color:var(--warning);">
+            <span>💡 五、考生疑点 / 蒙题标记 / 模糊盲区（选填）</span>
+            <span class="q-score" style="color:var(--warning);">AI 重点穿透点拨</span>
+          </div>
+          <div class="q-input-wrap">
+            <textarea id="ans_doubts" class="text-box" style="height:80px; border-color:rgba(210,153,34,0.4);" placeholder="随手记下你作答时犹豫不决、靠蒙的题目，或者公式/受体记不清的点。AI批卷时将为你逐一制作答疑便签！" oninput="onInput('doubts', this.value)"></textarea>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 底部简要进度 -->
+      <div class="panel-bottom-bar">
+        <span id="saveStatus" style="color:var(--text-muted);">已自动保存</span>
+        <span id="statText" style="color:var(--text-muted);">已答: 0/16 题</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== 模式二：🖍️ 试卷批注复盘视图 ==================== -->
+  <div class="anno-container" id="annoViewContainer" style="display:flex;">
+    <div class="anno-toolbar">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span style="font-size:12.5px; color:var(--text-muted); font-weight:600;">📂 选择已批改试卷：</span>
+        <select id="annoPaperSelect" class="anno-select" onchange="renderAnnotatedPaper(this.value)"></select>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <button class="btn" id="btnOnlyMistakes" onclick="toggleOnlyMistakes()">🔥 只看失分/错题</button>
+        <button class="btn" id="btnMaskRubric" onclick="toggleMaskRubric()">🙈 遮挡采分标准自测（悬停显形）</button>
+      </div>
+    </div>
+
+    <div class="anno-scroll">
+      <div class="anno-paper" id="annoPaperRoot">
+        <!-- 动态渲染试卷批注详情 -->
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">已复制到剪贴板</div>
+
+<script>
+let appMode = "anno"; // 默认展示刚批改完的试卷批注视图
+let isPreview = true;
+let answers = { mcq: {}, vocab1: "", vocab2: "", vocab3: "", vocab4: "", vocab5: "", saq1: "", saq2: "", essay: "", doubts: "" };
+let timerSec = 35 * 60;
+let timerRunning = false;
+let timerId = null;
+
+// 批注视图过滤状态
+let currentAnnoId = "";
+let onlyMistakes = false;
+let maskRubric = false;
+
+window.addEventListener("DOMContentLoaded", () => {
+  renderMCQ();
+  loadData();
+  initAnnotationView();
+});
+
+// 切换【实战作答台】与【试卷批注复盘】
+function switchAppMode(mode) {
+  appMode = mode;
+  const examContainer = document.getElementById("examViewContainer");
+  const annoContainer = document.getElementById("annoViewContainer");
+  const tabExamBtn = document.getElementById("tabExamBtn");
+  const tabAnnoBtn = document.getElementById("tabAnnoBtn");
+  const examTimerBar = document.getElementById("examTimerBar");
+  const annoTopHint = document.getElementById("annoTopHint");
+  const copyCardBtn = document.getElementById("copyCardBtn");
+  const retakePaperBtn = document.getElementById("retakePaperBtn");
+  const resetExamBtn = document.getElementById("resetExamBtn");
+
+  if (mode === "exam") {
+    examContainer.style.display = "flex";
+    annoContainer.style.display = "none";
+    tabExamBtn.className = "mode-tab active";
+    tabAnnoBtn.className = "mode-tab";
+    examTimerBar.style.display = "flex";
+    annoTopHint.style.display = "none";
+    copyCardBtn.style.display = "inline-flex";
+    retakePaperBtn.style.display = "none";
+    resetExamBtn.style.display = "inline-flex";
+    if (!timerRunning) startTimer();
+  } else {
+    examContainer.style.display = "none";
+    annoContainer.style.display = "flex";
+    tabExamBtn.className = "mode-tab";
+    tabAnnoBtn.className = "mode-tab active-anno";
+    examTimerBar.style.display = "none";
+    annoTopHint.style.display = "flex";
+    copyCardBtn.style.display = "none";
+    retakePaperBtn.style.display = "inline-flex";
+    resetExamBtn.style.display = "none";
+    if (timerId) {
+      clearInterval(timerId);
+      timerRunning = false;
+    }
+  }
+}
+
+// 初始化试卷批注复盘列表
+function initAnnotationView() {
+  const list = window.GRADING_HISTORY || [];
+  const badge = document.getElementById("annoCountBadge");
+  if (badge) badge.textContent = list.length;
+
+  const sel = document.getElementById("annoPaperSelect");
+  if (!sel) return;
+
+  if (list.length === 0) {
+    sel.innerHTML = `<option value="">暂无已批改试卷</option>`;
+    document.getElementById("annoPaperRoot").innerHTML = `<div style="padding:40px; text-align:center; color:var(--text-muted);">暂无批注记录。完成模考交卷后，AI 会自动将批注同步至此。</div>`;
+    return;
+  }
+
+  sel.innerHTML = list.map(item =>
+    `<option value="${item.id}">[${item.date}] ${item.title} — 实得 ${item.score}/${item.maxScore}分 (${item.rate})</option>`
+  ).join("");
+
+  currentAnnoId = list[0].id;
+  renderAnnotatedPaper(currentAnnoId);
+}
+
+function toggleOnlyMistakes() {
+  onlyMistakes = !onlyMistakes;
+  const btn = document.getElementById("btnOnlyMistakes");
+  btn.className = onlyMistakes ? "btn btn-active-toggle" : "btn";
+  renderAnnotatedPaper(currentAnnoId);
+}
+
+function toggleMaskRubric() {
+  maskRubric = !maskRubric;
+  const btn = document.getElementById("btnMaskRubric");
+  btn.className = maskRubric ? "btn btn-active-toggle" : "btn";
+  document.body.classList.toggle("mask-rubric", maskRubric);
+}
+
+// 渲染整张批注试卷
+function renderAnnotatedPaper(id) {
+  currentAnnoId = id;
+  const list = window.GRADING_HISTORY || [];
+  const data = list.find(x => x.id === id) || list[0];
+  if (!data) return;
+
+  const root = document.getElementById("annoPaperRoot");
+  let html = [];
+
+  // 1. 仿真卷头统分卡
+  const secCells = (data.sectionScores || []).map(s => `
+    <div class="stamp-cell">
+      <div class="stamp-cell-hd">${escapeHtml(s.name)}</div>
+      <div class="stamp-cell-val">${s.got}<span style="color:var(--text-muted);font-weight:normal;">/${s.max}</span></div>
+    </div>
+  `).join("");
+
+  html.push(`
+    <div class="paper-header-card">
+      <div class="ph-left">
+        <div>
+          <div class="ph-title-row">
+            <span class="ph-title">🖍️ ${escapeHtml(data.title)} · 阅卷批注卷</span>
+            <span class="q-tag warn">${escapeHtml(data.lampText)}</span>
+          </div>
+          <div class="ph-meta" style="margin-top:6px;">
+            <span>📅 模考日期：${escapeHtml(data.date)}</span>
+            <span>⏱️ 实战耗时：${escapeHtml(data.timeSpent)}</span>
+          </div>
+        </div>
+        <div class="ph-comment">
+          <strong>👨‍🏫 阅卷组长总评：</strong>${escapeHtml(data.summaryComment)}
+        </div>
+      </div>
+
+      <div class="score-stamp-box">
+        <div class="stamp-top">
+          <div>
+            <div class="stamp-total-label">实得总分 / 满分</div>
+            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">折合百分制：${escapeHtml(data.rate)}</div>
+          </div>
+          <div class="stamp-total-num">
+            ${data.score} <span class="stamp-total-max">/ ${data.maxScore}</span>
+          </div>
+        </div>
+        ${data.closedBookNote ? `<div class="stamp-closed-note">⚠️ ${escapeHtml(data.closedBookNote)}</div>` : ""}
+        <div class="stamp-grid">
+          ${secCells}
+        </div>
+      </div>
+    </div>
+  `);
+
+  // 2. 顽固复发错题红牌警告区
+  if (data.repeatAlerts && data.repeatAlerts.length > 0) {
+    html.push(`
+      <div class="repeat-alert-card">
+        <div class="repeat-alert-title">🚨 顽固复发错题红牌警告（连续两次模考栽在同一考点！）</div>
+        <div class="repeat-grid">
+          ${data.repeatAlerts.map(r => `
+            <div class="repeat-item">
+              <div class="repeat-item-hd">${escapeHtml(r.topic)}</div>
+              <div class="repeat-cmp">
+                <span>• ${escapeHtml(r.firstTime)}</span>
+                <span style="color:#ff7b72; font-weight:600;">• ${escapeHtml(r.secondTime)}</span>
+              </div>
+              <div class="repeat-fix">💡 根治口诀：${escapeHtml(r.fix)}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `);
+  }
+
+  // 3. 一、英文专业词汇与名词解释
+  const vocabList = (data.vocab || []).filter(v => !onlyMistakes || v.got < v.max);
+  if (vocabList.length > 0) {
+    const vGot = (data.vocab || []).reduce((acc, cur) => acc + cur.got, 0);
+    const vMax = (data.vocab || []).reduce((acc, cur) => acc + cur.max, 0);
+    html.push(`
+      <div class="anno-sec-block">
+        <div class="anno-sec-header">
+          <span class="anno-sec-title">一、英文专业词汇与名词解释（原答划词批注 vs 官方采分基准）</span>
+          <span class="anno-sec-score">本大题得分：${vGot} / ${vMax} 分</span>
+        </div>
+        ${vocabList.map(v => {
+          const isFull = v.got >= v.max;
+          const tagsHtml = (v.tags || []).map(t => {
+            const cls = t.includes("满分") ? "good" : (t.includes("二") || t.includes("空白") ? "warn" : "info");
+            return `<span class="q-tag ${cls}">${escapeHtml(t)}</span>`;
+          }).join("");
+          return `
+            <div class="q-anno-card ${isFull ? 'full-marks' : ''}">
+              <div class="q-anno-top">
+                <div class="q-anno-stem">
+                  <span>第 ${v.num} 题 · <strong>${escapeHtml(v.term)}</strong></span>
+                  ${tagsHtml}
+                </div>
+                <span class="q-score-pill ${isFull ? 'pass' : ''}">得分：${v.got} / ${v.max} 分</span>
+              </div>
+              <div class="q-anno-body">
+                <div class="q-col-student">
+                  <div class="col-sub-label"><span>✍️ 考生原始作答与红笔原位批注</span></div>
+                  <div class="student-ans-box">${v.annotatedHtml}</div>
+                </div>
+                <div class="q-col-rubric">
+                  <div class="col-sub-label"><span>📌 官方采分要点核对（点击可揭开/遮挡）</span></div>
+                  <div class="rubric-list">
+                    ${(v.rubric || []).map(r => `
+                      <div class="rubric-item ${r.hit ? 'hit' : 'missed'}" onclick="this.querySelector('.rubric-text').classList.toggle('revealed')">
+                        <span class="rubric-icon">${r.hit ? '✅' : '⭕'}</span>
+                        <span class="rubric-text">${escapeHtml(r.text)}</span>
+                      </div>
+                    `).join("")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `);
+  }
+
+  // 4. 二、单项选择题
+  const mcqList = (data.mcq || []).filter(m => !onlyMistakes || !m.isCorrect);
+  if (mcqList.length > 0) {
+    const mGot = (data.mcq || []).reduce((acc, cur) => acc + (cur.isCorrect ? 2 : 0), 0);
+    const mMax = (data.mcq || []).length * 2;
+    html.push(`
+      <div class="anno-sec-block">
+        <div class="anno-sec-header">
+          <span class="anno-sec-title">二、单项选择题（选项原位正误比对与错因推导）</span>
+          <span class="anno-sec-score">本大题得分：${mGot} / ${mMax} 分</span>
+        </div>
+        <div class="mcq-anno-grid">
+          ${mcqList.map(m => {
+            const optsHtml = ['A', 'B', 'C', 'D'].map(k => {
+              const txt = (m.options && m.options[k]) ? m.options[k] : "";
+              let cls = "mcq-opt-pill";
+              let badge = "";
+              if (k === m.rightAns) {
+                cls += " correct-opt";
+                badge = (m.userAns === k) ? "✅ 选对" : "🎯 正确答案";
+              } else if (k === m.userAns && !m.isCorrect) {
+                cls += " wrong-opt";
+                badge = "❌ 你的选择";
+              }
+              return `
+                <div class="${cls}">
+                  <span><strong>${k}.</strong> ${escapeHtml(txt)}</span>
+                  ${badge ? `<span style="flex-shrink:0; font-size:11px;">${badge}</span>` : ""}
+                </div>
+              `;
+            }).join("");
+
+            return `
+              <div class="mcq-anno-card ${m.isCorrect ? '' : 'wrong'}">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                  <span style="font-size:13px; font-weight:600; color:var(--text-strong); line-height:1.5;">
+                    ${m.num}. ${escapeHtml(m.stem)}
+                  </span>
+                  <span class="q-score-pill ${m.isCorrect ? 'pass' : ''}" style="font-size:11.5px; padding:1px 7px;">
+                    ${m.isCorrect ? '+2 / 2 分' : '0 / 2 分'}
+                  </span>
+                </div>
+                <div class="mcq-anno-opts">${optsHtml}</div>
+                <div class="mcq-anno-note">
+                  <strong>${m.isCorrect ? '💡 题眼巩固：' : '🖍️ 错因批注：'}</strong>${escapeHtml(m.note)}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `);
+  }
+
+  // 5. 三、简答题
+  const saqList = (data.saq || []).filter(s => !onlyMistakes || s.got < s.max);
+  if (saqList.length > 0) {
+    const sGot = (data.saq || []).reduce((acc, cur) => acc + cur.got, 0);
+    const sMax = (data.saq || []).reduce((acc, cur) => acc + cur.max, 0);
+    html.push(`
+      <div class="anno-sec-block">
+        <div class="anno-sec-header">
+          <span class="anno-sec-title">三、简答题（逐句红笔批注 vs 官方采分骨架拆解）</span>
+          <span class="anno-sec-score">本大题得分：${sGot} / ${sMax} 分</span>
+        </div>
+        ${saqList.map(s => {
+          const isFull = s.got >= s.max;
+          return `
+            <div class="q-anno-card ${isFull ? 'full-marks' : ''}">
+              <div class="q-anno-top">
+                <div class="q-anno-stem">
+                  <span class="q-tag info">${escapeHtml(s.code)}</span>
+                  <span>第 ${s.num} 题 · ${escapeHtml(s.question)}</span>
+                </div>
+                <span class="q-score-pill ${isFull ? 'pass' : ''}">得分：${s.got} / ${s.max} 分</span>
+              </div>
+              <div class="q-anno-body">
+                <div class="q-col-student">
+                  <div class="col-sub-label"><span>✍️ 考生原始作答与红笔原位批注</span></div>
+                  <div class="student-ans-box">${s.annotatedHtml}</div>
+                </div>
+                <div class="q-col-rubric">
+                  <div class="col-sub-label"><span>📌 官方采分骨架逐小项核对</span></div>
+                  <div class="rubric-list">
+                    ${(s.rubric || []).map(r => `
+                      <div class="rubric-item ${r.hit ? 'hit' : 'missed'}" onclick="this.querySelector('.rubric-text').classList.toggle('revealed')">
+                        <span class="rubric-icon">${r.hit ? '✅' : '⭕'}</span>
+                        <div class="rubric-text">
+                          <div style="display:flex; justify-content:space-between; font-weight:700; color:var(--text-strong); margin-bottom:2px;">
+                            <span>${escapeHtml(r.part)}</span>
+                            <span style="color:${r.hit ? '#7ee787' : '#ff7b72'}; font-family:monospace;">实得 ${escapeHtml(r.score)}</span>
+                          </div>
+                          <div>${escapeHtml(r.detail)}</div>
+                        </div>
+                      </div>
+                    `).join("")}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `);
+  }
+
+  // 6. 四、综合论述题
+  if (data.essay && (!onlyMistakes || data.essay.got < data.essay.max)) {
+    const e = data.essay;
+    const isFull = e.got >= e.max;
+    html.push(`
+      <div class="anno-sec-block">
+        <div class="anno-sec-header">
+          <span class="anno-sec-title">四、综合论述题（原答诊断 + 分模块采分矩阵）</span>
+          <span class="anno-sec-score">本大题得分：${e.got} / ${e.max} 分</span>
+        </div>
+        <div class="q-anno-card ${isFull ? 'full-marks' : ''}">
+          <div class="q-anno-top">
+            <div class="q-anno-stem">
+              <span class="q-tag info">${escapeHtml(e.code)}</span>
+              <span>${escapeHtml(e.question)}</span>
+            </div>
+            <span class="q-score-pill ${isFull ? 'pass' : ''}">得分：${e.got} / ${e.max} 分</span>
+          </div>
+          <div style="padding:16px 18px; display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <div class="col-sub-label" style="margin-bottom:6px;"><span>✍️ 考生原始作答与红笔原位批注</span></div>
+              <div class="student-ans-box">${e.annotatedHtml}</div>
+            </div>
+            <div>
+              <div class="col-sub-label" style="margin-bottom:6px;"><span>📊 官方分项采分矩阵表（点击右侧采分细则可揭开/遮挡自测）</span></div>
+              <table class="essay-table">
+                <thead>
+                  <tr>
+                    <th style="width:170px;">采分模块</th>
+                    <th style="width:95px; text-align:center;">实得 / 满分</th>
+                    <th>官方核心采分关键词与临床实例（必背靶心）</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(e.rubricTable || []).map(row => {
+                    const color = row.status === 'ok' ? '#7ee787' : (row.status === 'warn' ? '#e3b341' : '#ff7b72');
+                    const icon = row.status === 'ok' ? '✅' : (row.status === 'warn' ? '⚠️' : '⭕');
+                    return `
+                      <tr>
+                        <td style="font-weight:700; color:var(--text-strong);">${icon} ${escapeHtml(row.item)}</td>
+                        <td style="text-align:center; font-family:monospace; font-weight:700; color:${color};">${row.got} / ${row.max}</td>
+                        <td class="essay-kp-cell" onclick="this.classList.toggle('revealed')">${escapeHtml(row.keyPoints)}</td>
+                      </tr>
+                    `;
+                  }).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `);
+  }
+
+  // 7. 五、考生交卷疑点 · 阅卷组长一对一答疑便签
+  if (data.doubtsQA && data.doubtsQA.length > 0) {
+    html.push(`
+      <div class="anno-sec-block">
+        <div class="anno-sec-header" style="border-left-color: var(--warning);">
+          <span class="anno-sec-title" style="color:#e3b341;">💡 五、考生交卷疑点与盲区 · 阅卷组长一对一答疑便签</span>
+          <span style="font-size:12px; color:var(--text-muted);">针对交卷时填写的模糊点专项扫盲</span>
+        </div>
+        <div class="doubts-grid">
+          ${data.doubtsQA.map(d => `
+            <div class="doubt-note">
+              <div class="doubt-q">🙋 ${escapeHtml(d.q)}</div>
+              <div class="doubt-a">${escapeHtml(d.a)}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `);
+  }
+
+  // 8. 六、复盘回马枪（交互式自测闪卡）
+  if (data.flashcards && data.flashcards.length > 0) {
+    html.push(`
+      <div class="anno-sec-block">
+        <div class="anno-sec-header" style="border-left-color: var(--success);">
+          <span class="anno-sec-title" style="color:#7ee787;">⚡ 六、复盘回马枪（当场闭卷快问快答，点击卡片检验是否真懂！）</span>
+          <span style="font-size:12px; color:var(--text-muted);">先在心里默答，再点击揭晓</span>
+        </div>
+        <div class="flashcard-grid">
+          ${data.flashcards.map((fc, idx) => `
+            <div class="flashcard" id="fc_${idx}">
+              <div class="fc-q">${escapeHtml(fc.q)}</div>
+              <div class="fc-a">${escapeHtml(fc.a)}</div>
+              <div>
+                <button class="btn" style="font-size:11.5px; padding:4px 10px;" onclick="document.getElementById('fc_${idx}').classList.toggle('open')">
+                  👁️ 点击揭晓 / 收起标准答案
+                </button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `);
+  }
+
+  root.innerHTML = html.join("");
+}
+
+// 一键把当前批注卷的原题载入【实战作答台】开启二刷
+function retakeCurrentAnnotatedPaper() {
+  const list = window.GRADING_HISTORY || [];
+  const data = list.find(x => x.id === currentAnnoId) || list[0];
+  if (!data || !data.rawPaperMarkdown) {
+    showToast("未找到该卷原始试题文本");
+    return;
+  }
+  if (confirm(`确认将【${data.title}】空白原题载入实战作答台，并清空当前答题卡开启 35 分钟限时二刷？`)) {
+    document.getElementById("paperEditor").value = data.rawPaperMarkdown;
+    savePaper(data.rawPaperMarkdown);
+    isPreview = true;
+    updateViewModeUI();
+
+    answers = { mcq: {}, vocab1: "", vocab2: "", vocab3: "", vocab4: "", vocab5: "", saq1: "", saq2: "", essay: "", doubts: "" };
+    save();
+    for (let i = 1; i <= 8; i++) updateMCQUI(i);
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById(`ans_vocab${i}`);
+      if (el) el.value = "";
+    }
+    document.getElementById("ans_saq1").value = "";
+    document.getElementById("ans_saq2").value = "";
+    document.getElementById("ans_essay").value = "";
+    const doubtsEl = document.getElementById("ans_doubts");
+    if (doubtsEl) doubtsEl.value = "";
+
+    switchAppMode("exam");
+    resetTimer();
+    showToast("已载入原题并开启 35 分钟二刷计时！");
+  }
+}
+
+/* ==================== 原有作答台核心逻辑 ==================== */
+function renderMCQ() {
+  const row = document.getElementById("mcqRow");
+  let html = "";
+  for (let i = 1; i <= 8; i++) {
+    html += `
+      <div class="mcq-item">
+        <span class="mcq-item-num">第${i}题</span>
+        <div class="mcq-btn-group">
+          ${['A', 'B', 'C', 'D'].map(opt => `
+            <button class="opt-btn" id="opt_${i}_${opt}" onclick="pickMCQ(${i}, '${opt}')">${opt}</button>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+  row.innerHTML = html;
+}
+
+function pickMCQ(num, opt) {
+  if (answers.mcq[num] === opt) {
+    delete answers.mcq[num];
+  } else {
+    answers.mcq[num] = opt;
+  }
+  updateMCQUI(num);
+  save();
+}
+
+function updateMCQUI(num) {
+  const sel = answers.mcq[num];
+  ['A', 'B', 'C', 'D'].forEach(opt => {
+    const btn = document.getElementById(`opt_${num}_${opt}`);
+    if (btn) btn.className = (sel === opt) ? "opt-btn active" : "opt-btn";
+  });
+}
+
+let saveTimer = null;
+function onInput(key, val) {
+  answers[key] = val;
+  document.getElementById("saveStatus").textContent = "正在保存...";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    save();
+    document.getElementById("saveStatus").textContent = "已自动保存";
+  }, 300);
+}
+
+function save() {
+  localStorage.setItem("EXAM_ANSWERS_CURRENT", JSON.stringify(answers));
+  updateStats();
+}
+
+function loadData() {
+  const saved = localStorage.getItem("EXAM_ANSWERS_CURRENT");
+  answers = saved ? JSON.parse(saved) : { mcq: {}, vocab1: "", vocab2: "", vocab3: "", vocab4: "", vocab5: "", saq1: "", saq2: "", essay: "", doubts: "" };
+
+  for (let i = 1; i <= 8; i++) updateMCQUI(i);
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById(`ans_vocab${i}`);
+    if (el) el.value = answers[`vocab${i}`] || "";
+  }
+  document.getElementById("ans_saq1").value = answers.saq1 || "";
+  document.getElementById("ans_saq2").value = answers.saq2 || "";
+  document.getElementById("ans_essay").value = answers.essay || "";
+  const doubtsEl = document.getElementById("ans_doubts");
+  if (doubtsEl) doubtsEl.value = answers.doubts || "";
+
+  const paper = localStorage.getItem("EXAM_PAPER_CURRENT") || "";
+  document.getElementById("paperEditor").value = paper;
+  renderPaper(paper);
+
+  updateViewModeUI();
+  updateStats();
+}
+
+function resetAll() {
+  if (confirm("确认清空当前答卷卡并重置 35 分钟计时？")) {
+    answers = { mcq: {}, vocab1: "", vocab2: "", vocab3: "", vocab4: "", vocab5: "", saq1: "", saq2: "", essay: "", doubts: "" };
+    save();
+    for (let i = 1; i <= 8; i++) updateMCQUI(i);
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById(`ans_vocab${i}`);
+      if (el) el.value = "";
+    }
+    document.getElementById("ans_saq1").value = "";
+    document.getElementById("ans_saq2").value = "";
+    document.getElementById("ans_essay").value = "";
+    const doubtsEl = document.getElementById("ans_doubts");
+    if (doubtsEl) doubtsEl.value = "";
+    resetTimer();
+    showToast("已清空答卷卡并重置计时");
+  }
+}
+
+function savePaper(txt) {
+  localStorage.setItem("EXAM_PAPER_CURRENT", txt);
+  renderPaper(txt);
+}
+
+function clearPaper() {
+  document.getElementById("paperEditor").value = "";
+  savePaper("");
+  showToast("已清空试卷");
+}
+
+function togglePaperMode() {
+  isPreview = !isPreview;
+  updateViewModeUI();
+}
+
+function updateViewModeUI() {
+  const ed = document.getElementById("paperEditor");
+  const pv = document.getElementById("paperPreview");
+  const btn = document.getElementById("viewToggleBtn");
+
+  if (isPreview) {
+    ed.style.display = "none";
+    pv.style.display = "block";
+    btn.textContent = "编辑模式";
+  } else {
+    ed.style.display = "block";
+    pv.style.display = "none";
+    btn.textContent = "预览模式";
+  }
+}
+
+function checkNewPaperReset(newText) {
+  const match = newText.match(/^#\s*(.+)$/m);
+  const newTitle = match ? match[1].trim() : "";
+  const oldTitle = localStorage.getItem("EXAM_TITLE_CURRENT") || "";
+
+  const hasVocab = [1, 2, 3, 4, 5].some(i => answers[`vocab${i}`] && answers[`vocab${i}`].trim());
+  const hasAnswers = Object.keys(answers.mcq).length > 0 || hasVocab ||
+                     (answers.saq1 && answers.saq1.trim()) || (answers.saq2 && answers.saq2.trim()) ||
+                     (answers.essay && answers.essay.trim()) || (answers.doubts && answers.doubts.trim());
+
+  if (newTitle && oldTitle && newTitle !== oldTitle && hasAnswers) {
+    if (confirm(`检测到载入新试卷：\n【${newTitle}】\n\n是否自动清空旧答卷卡，并重新开启 35 分钟计时？`)) {
+      answers = { mcq: {}, vocab1: "", vocab2: "", vocab3: "", vocab4: "", vocab5: "", saq1: "", saq2: "", essay: "", doubts: "" };
+      save();
+      for (let i = 1; i <= 8; i++) updateMCQUI(i);
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById(`ans_vocab${i}`);
+        if (el) el.value = "";
+      }
+      document.getElementById("ans_saq1").value = "";
+      document.getElementById("ans_saq2").value = "";
+      document.getElementById("ans_essay").value = "";
+      const doubtsEl = document.getElementById("ans_doubts");
+      if (doubtsEl) doubtsEl.value = "";
+      resetTimer();
+    }
+  } else if (!hasAnswers && newTitle && newTitle !== oldTitle) {
+    resetTimer();
+  }
+  if (newTitle) {
+    localStorage.setItem("EXAM_TITLE_CURRENT", newTitle);
+  }
+}
+
+async function pastePaperFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text && text.trim()) {
+      checkNewPaperReset(text);
+      document.getElementById("paperEditor").value = text;
+      savePaper(text);
+      isPreview = true;
+      updateViewModeUI();
+      showToast("试卷已载入并切换到阅读模式");
+    } else {
+      showToast("剪贴板中无内容，请先在聊天窗复制试卷");
+    }
+  } catch (err) {
+    isPreview = false;
+    updateViewModeUI();
+    document.getElementById("paperEditor").focus();
+    showToast("浏览器权限受限，请在左侧框内 Ctrl+V 粘贴");
+  }
+}
+
+function renderPaper(md) {
+  const pv = document.getElementById("paperPreview");
+  const stems = extractStems(md);
+  for (let i = 1; i <= 5; i++) {
+    const lbl = document.getElementById(`label_vocab${i}`);
+    if (lbl) {
+      lbl.textContent = stems[`vocab${i}`] ? `${i}. ${stems[`vocab${i}`]}：` : `第 ${i} 题作答：`;
+    }
+  }
+  const saq1Lbl = document.getElementById("label_saq1");
+  if (saq1Lbl) saq1Lbl.textContent = stems.saq1 ? `1. ${stems.saq1}` : "第 1 题作答：";
+  const saq2Lbl = document.getElementById("label_saq2");
+  if (saq2Lbl) saq2Lbl.textContent = stems.saq2 ? `2. ${stems.saq2}` : "第 2 题作答：";
+  const essayLbl = document.getElementById("label_essay");
+  if (essayLbl) essayLbl.textContent = stems.essay ? `1. ${stems.essay}` : "论述题作答：";
+  if (!md.trim()) {
+    pv.innerHTML = "<p style='color:var(--text-muted); padding:20px 0;'>暂无试卷内容。<br><br>👉 点击上方【📋 一键粘贴并预览】直接载入剪贴板中的试卷。</p>";
+    return;
+  }
+  let lines = md.split("\n");
+  let html = [];
+  let inList = false;
+
+  for (let line of lines) {
+    let l = line.trim();
+    if (!l) {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push("<div style='height:8px;'></div>");
+      continue;
+    }
+    if (l.startsWith("### ")) {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push(`<h3>${escapeHtml(l.slice(4))}</h3>`);
+    } else if (l.startsWith("## ")) {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push(`<h2>${escapeHtml(l.slice(3))}</h2>`);
+    } else if (l.startsWith("# ")) {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push(`<h1>${escapeHtml(l.slice(2))}</h1>`);
+    } else if (l.startsWith("> ")) {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push(`<blockquote>${formatInline(l.slice(2))}</blockquote>`);
+    } else if (l.startsWith("- ")) {
+      if (!inList) { html.push("<ul style='padding-left:18px; margin:4px 0;'>"); inList = true; }
+      html.push(`<li>${formatInline(l.slice(2))}</li>`);
+    } else if (l.startsWith("---")) {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push("<hr style='border:none; border-top:1px solid var(--border); margin:12px 0;'>");
+    } else {
+      if (inList) { html.push("</ul>"); inList = false; }
+      html.push(`<p style='margin:4px 0;'>${formatInline(l)}</p>`);
+    }
+  }
+  if (inList) html.push("</ul>");
+  pv.innerHTML = html.join("");
+}
+
+function formatInline(str) {
+  let s = escapeHtml(str);
+  s = s.replace(/`([^`]+)`/g, '<code style="color:#79c0ff; background:rgba(56,139,253,0.15); padding:1px 4px; border-radius:3px;">$1</code>');
+  s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/\\alpha\b/g, 'α');
+  s = s.replace(/\\beta\b/g, 'β');
+  s = s.replace(/\\gamma\b/g, 'γ');
+  s = s.replace(/\\times\b/g, '×');
+  s = s.replace(/\\approx\b/g, '≈');
+  s = s.replace(/\\le(q)?\b/g, '≤');
+  s = s.replace(/\\ge(q)?\b/g, '≥');
+  s = s.replace(/([A-Za-z0-9])_\{([^{}]+)\}/g, '$1<sub>$2</sub>');
+  s = s.replace(/([A-Za-z0-9])_([a-zA-Z0-9]+)/g, '$1<sub>$2</sub>');
+  s = s.replace(/\^\{([^{}]+)\}/g, '<sup>$1</sup>');
+  s = s.replace(/\^([0-9a-zA-Z]+)/g, '<sup>$1</sup>');
+  s = s.replace(/\$(.*?)\$/g, '$1');
+  return s;
+}
+
+function escapeHtml(text) {
+  if (text === null || text === undefined) return "";
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function updateStats() {
+  let count = Object.keys(answers.mcq).length;
+  for (let i = 1; i <= 5; i++) {
+    if (answers[`vocab${i}`] && answers[`vocab${i}`].trim()) count++;
+  }
+  if (answers.saq1.trim()) count++;
+  if (answers.saq2.trim()) count++;
+  if (answers.essay.trim()) count++;
+  document.getElementById("statText").textContent = `已答: ${count}/16 题`;
+}
+
+function startTimer() {
+  if (timerId) clearInterval(timerId);
+  timerRunning = true;
+  document.getElementById("timerToggleBtn").textContent = "暂停";
+  timerId = setInterval(() => {
+    timerSec--;
+    updateTimerUI();
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const el = document.getElementById("timerText");
+  if (timerSec >= 0) {
+    const m = Math.floor(timerSec / 60).toString().padStart(2, '0');
+    const s = (timerSec % 60).toString().padStart(2, '0');
+    el.textContent = `${m}:${s}`;
+    el.className = "timer-val";
+  } else {
+    const abs = Math.abs(timerSec);
+    const m = Math.floor(abs / 60).toString().padStart(2, '0');
+    const s = (abs % 60).toString().padStart(2, '0');
+    el.textContent = `+${m}:${s} 超时`;
+    el.className = "timer-val timer-overtime";
+  }
+}
+
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerId);
+    timerRunning = false;
+    document.getElementById("timerToggleBtn").textContent = "开始";
+  } else {
+    startTimer();
+  }
+}
+
+function resetTimer() {
+  timerSec = 35 * 60;
+  updateTimerUI();
+  if (appMode === "exam") startTimer();
+}
+
+function extractStems(txt) {
+  const stems = { vocab1: "", vocab2: "", vocab3: "", vocab4: "", vocab5: "", mcqBlock: "", saq1: "", saq2: "", essay: "" };
+  if (!txt) return stems;
+
+  const vocabSec = txt.match(/###\s*一[、\s].*?\n([\s\S]*?)(?=###\s*二|$)/i);
+  if (vocabSec) {
+    const vMatches = [...vocabSec[1].matchAll(/^\s*(\d+)\.\s*(?:\*\*)?(.*?)(?:\*\*)?\s*$/gm)];
+    for (let i = 0; i < 5; i++) {
+      if (vMatches[i]) stems[`vocab${i + 1}`] = vMatches[i][2].trim();
+    }
+  }
+
+  const mcqSec = txt.match(/###\s*二[、\s].*?\n([\s\S]*?)(?=###\s*三|$)/i);
+  if (mcqSec) {
+    stems.mcqBlock = mcqSec[1].trim();
+  }
+
+  const saqSec = txt.match(/###\s*三[、\s].*?\n([\s\S]*?)(?=###\s*四|$)/i);
+  if (saqSec) {
+    const sMatches = [...saqSec[1].matchAll(/^\s*(\d+)\.\s*(.*)$/gm)];
+    if (sMatches[0]) stems.saq1 = sMatches[0][2].trim();
+    if (sMatches[1]) stems.saq2 = sMatches[1][2].trim();
+  }
+
+  const essaySec = txt.match(/###\s*四[、\s].*?\n([\s\S]*?)(?=---|#|$)/i);
+  if (essaySec) {
+    const eLines = essaySec[1].split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("```"));
+    if (eLines[0]) stems.essay = eLines[0].replace(/^1\.\s*/, "").trim();
+  }
+
+  return stems;
+}
+
+function copyGradingCard() {
+  const paperText = document.getElementById("paperEditor").value.trim();
+  const firstLineMatch = paperText.match(/^#\s*(.+)$/m);
+  const examTitle = firstLineMatch ? firstLineMatch[1].trim() : "药理学考研模考答卷卡";
+  const stems = extractStems(paperText);
+
+  let timeDesc = "";
+  if (timerSec >= 0) {
+    const spent = Math.max(1, Math.round((35 * 60 - timerSec) / 60));
+    timeDesc = `${spent} 分钟 / 35 分钟标准时长 (正常用时)`;
+  } else {
+    const overtime = Math.ceil(Math.abs(timerSec) / 60);
+    const totalSpent = 35 + overtime;
+    timeDesc = `${totalSpent} 分钟 / 35 分钟标准时长 (⚠️ 超时 ${overtime} 分钟)`;
+  }
+
+  let md = `# ${examTitle}\n\n`;
+  md += `- 用时：${timeDesc}\n`;
+  md += `- 满分：75 分\n\n`;
+  md += `---\n\n`;
+
+  md += `## 考生作答内容\n\n`;
+
+  md += `### 一、英文专业词汇与名词解释（5 题，每题 3 分，共 15 分）\n`;
+  for (let i = 1; i <= 5; i++) {
+    const st = stems[`vocab${i}`];
+    const ans = (answers[`vocab${i}`] || "").trim();
+    md += `${i}. **第 ${i} 题 ${st ? `(${st})` : ''}**：\n${ans || '（未作答）'}\n\n`;
+  }
+
+  md += `### 二、单项选择题（8 题，每题 2 分，共 16 分）\n`;
+  let mcqArr = [];
+  for (let i = 1; i <= 8; i++) {
+    mcqArr.push(`${i}. ${answers.mcq[i] || '未作答'}`);
+  }
+  md += `**考生涂卡**：` + mcqArr.join(" | ") + "\n\n";
+  if (stems.mcqBlock) {
+    md += `<details><summary>附：单选题原题干与选项（供 AI 跨会话精准核对与归档）</summary>\n\n${stems.mcqBlock}\n\n</details>\n\n`;
+  }
+
+  md += `### 三、简答题（2 题，每题 10 分，共 20 分）\n`;
+  md += `1. **第 1 题 ${stems.saq1 ? `(${stems.saq1})` : ''}**：\n${answers.saq1.trim() || '（未作答）'}\n\n`;
+  md += `2. **第 2 题 ${stems.saq2 ? `(${stems.saq2})` : ''}**：\n${answers.saq2.trim() || '（未作答）'}\n\n`;
+
+  md += `### 四、综合论述题（1 题，共 24 分）\n`;
+  if (stems.essay) {
+    md += `> **题干**：${stems.essay}\n\n`;
+  }
+  md += `${answers.essay.trim() || '（未作答）'}\n\n`;
+
+  if (answers.doubts && answers.doubts.trim()) {
+    md += `### 五、考生疑点与蒙题记录（盲区穿透区）\n`;
+    md += `${answers.doubts.trim()}\n\n`;
+  }
+
+  md += `---\n\n`;
+  md += `## 请 AI 考官批改\n`;
+  md += `请根据试卷标准答案进行严格判卷，并同步将结构化红笔批注写入【模考归档/grading_data.js】以便在答卷台【🖍️ 试卷批注复盘】视图中直接查看。\n`;
+
+  navigator.clipboard.writeText(md).then(() => {
+    showToast("答题卡已复制到剪贴板");
+  }).catch(() => {
+    showToast("复制失败，请手动在控制台查看");
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2200);
+}
+</script>
+</body>
+</html>
