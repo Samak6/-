@@ -1,0 +1,92 @@
+#separator:Tab
+#html:false
+#tags column:3
+Pharmacology	药理学	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Pharmacokinetics	药物代谢动力学（药动学）	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Pharmacodynamics	药物效应动力学（药效学）	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Selectivity	（药物作用的）选择性	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Adverse drug reaction (ADR)	药物不良反应	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Side effect	副作用	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Toxic effect	毒性反应	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Allergic reaction	过敏反应（变态反应）	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Residual effect (After effect)	后遗效应	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Idiosyncratic reaction	特异质反应	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Dose-response relationship	量-效关系	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Median effective dose (ED50)	半数有效量	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Median lethal dose (LD50)	半数致死量	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Therapeutic index (TI)	治疗指数	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌 状态::已考_已通关
+Receptor	受体	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Full agonist	完全激动药	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Partial agonist	部分激动药	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌 状态::已考
+Inverse agonist	反向激动药	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Competitive antagonist	竞争性拮抗药	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Non-competitive antagonist	非竞争性拮抗药	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Allosteric modulator	变构调节剂	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Efficacy (Maximum effect)	效能（最大效应）	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Potency	效价强度	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌 状态::已考3次_待回炉
+Passive transport (Simple diffusion)	被动转运（简单扩散）	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+First-pass effect (elimination)	首关效应（首过消除）	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌 状态::已考_已通关
+Hepato-enteral circulation	肝肠循环	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Bioavailability (F)	生物利用度	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌 状态::已考
+Apparent volume of distribution (Vd)	表观分布容积	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Half-life (t1/2)	消除半衰期	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+Clearance (CL)	清除率	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌 状态::已考2次_待回炉
+Steady-state plasma concentration (Css)	稳态血药浓度（坪值）	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌 状态::已考1次_待回炉
+Area under the concentration-time curve (AUC)	血药浓度-时间曲线下面积	药理学考研 单元::Unit01 梯度::Tier_S_考纲明牌
+First-order / Zero-order elimination	一级 / 零级消除动力学	药理学考研 单元::Unit01 梯度::Tier_A_掌握核心
+Receptor desensitization / hypersensitization	受体脱敏 / 受体增敏	药理学考研 单元::Unit01 梯度::Tier_A_掌握核心
+Blood-brain barrier (BBB)	血-脑屏障	药理学考研 单元::Unit01 梯度::Tier_A_掌握核心
+Safety pharmacology	安全药理学（一般药理学）	药理学考研 单元::Unit01 梯度::Tier_C_了解常识
+Spasm of accommodation	调节痉挛	药理学考研 单元::Unit02 梯度::Tier_B_熟悉重点 状态::已考1次_待回炉
+Paralysis of accommodation (Cycloplegia)	调节麻痹	药理学考研 单元::Unit02 梯度::Tier_B_熟悉重点
+Atropinization	阿托品化	药理学考研 单元::Unit02 梯度::Tier_B_熟悉重点 状态::已考1次_待回炉
+Depolarizing muscle relaxants	去极化型肌松药	药理学考研 单元::Unit02 梯度::Tier_B_熟悉重点 状态::已考1次_待回炉
+Non-depolarizing muscle relaxants	非去极化型肌松药	药理学考研 单元::Unit02 梯度::Tier_B_熟悉重点
+Exocytosis & Quantal release	胞裂外排与量子化释放	药理学考研 单元::Unit02 梯度::Tier_C_了解常识
+Neuronal uptake (Uptake-1)	神经摄取（摄取-1）	药理学考研 单元::Unit02 梯度::Tier_C_了解常识
+Adrenaline reversal	肾上腺素升压作用的翻转	药理学考研 单元::Unit03 梯度::Tier_A_掌握核心
+Intrinsic sympathomimetic activity (ISA)	内在拟交感活性	药理学考研 单元::Unit03 梯度::Tier_A_掌握核心
+Membrane stabilizing action	膜稳定作用	药理学考研 单元::Unit03 梯度::Tier_A_掌握核心
+Drug tolerance	耐受性	药理学考研 单元::Unit04 梯度::Tier_B_熟悉重点
+Premedication	麻醉前给药	药理学考研 单元::Unit04 梯度::Tier_C_了解常识
+Neuroleptanalgesia	神经安定镇痛术	药理学考研 单元::Unit04 梯度::Tier_C_了解常识
+Basal / Induction of anesthesia	基础麻醉 / 诱导麻醉	药理学考研 单元::Unit04 梯度::Tier_C_了解常识
+Artificial hibernation	人工冬眠	药理学考研 单元::Unit05 梯度::Tier_B_熟悉重点
+Tardive dyskinesia (TD)	迟发性运动障碍	药理学考研 单元::Unit05 梯度::Tier_B_熟悉重点
+Neuroleptic malignant syndrome (NMS)	神经阻滞剂恶性综合征	药理学考研 单元::Unit05 梯度::Tier_B_熟悉重点
+Wearing-off & On-off phenomenon	剂末现象与开-关现象	药理学考研 单元::Unit05 梯度::Tier_B_熟悉重点
+Drug dependence & Withdrawal syndrome	药物依赖性与戒断综合征	药理学考研 单元::Unit06 梯度::Tier_B_熟悉重点
+Aspirin-induced asthma	阿司匹林哮喘	药理学考研 单元::Unit06 梯度::Tier_B_熟悉重点
+Salicylism (Salicylic reaction)	水杨酸反应	药理学考研 单元::Unit06 梯度::Tier_B_熟悉重点
+Reye syndrome	瑞氏综合征	药理学考研 单元::Unit06 梯度::Tier_B_熟悉重点
+Reentry (Re-entrant excitation)	折返（折返激动）	药理学考研 单元::Unit07 梯度::Tier_A_掌握核心
+Early after-depolarization (EAD)	早后除极	药理学考研 单元::Unit07 梯度::Tier_A_掌握核心
+Delayed after-depolarization (DAD)	迟后除极	药理学考研 单元::Unit07 梯度::Tier_A_掌握核心
+Use-dependence (State-dependence)	使用依赖性（状态依赖性）	药理学考研 单元::Unit07 梯度::Tier_A_掌握核心
+First-dose phenomenon	首剂现象（首剂低血压）	药理学考研 单元::Unit08 梯度::Tier_A_掌握核心
+Ventricular (Cardiac) remodeling	心室重塑（心肌重构）	药理学考研 单元::Unit08 梯度::Tier_A_掌握核心
+Nitrate tolerance	硝酸酯耐受性	药理学考研 单元::Unit09 梯度::Tier_S_考纲明牌
+Coronary steal phenomenon	冠状动脉窃血现象	药理学考研 单元::Unit09 梯度::Tier_A_掌握核心
+Positive inotropic action	正性肌力作用	药理学考研 单元::Unit09 梯度::Tier_A_掌握核心
+Tissue-type plasminogen activator (tPA)	组织型纤溶酶原激活剂	药理学考研 单元::Unit10 梯度::Tier_S_考纲明牌
+Autacoids & Triple response	自体活性物质与三联反应	药理学考研 单元::Unit10 梯度::Tier_C_了解常识
+Permissive action	允许作用	药理学考研 单元::Unit11 梯度::Tier_A_掌握核心
+Rebound effect	反跳现象	药理学考研 单元::Unit11 梯度::Tier_A_掌握核心
+Withdrawal reaction	停药反应（医源性肾上腺皮质功能不全）	药理学考研 单元::Unit11 梯度::Tier_A_掌握核心
+Cushing syndrome	库欣综合征	药理学考研 单元::Unit11 梯度::Tier_A_掌握核心
+Insulin resistance (IR)	胰岛素抵抗（胰岛素耐受性）	药理学考研 单元::Unit12 梯度::Tier_C_了解常识
+Penicillin-binding proteins (PBPs)	青霉素结合蛋白	药理学考研 单元::Unit13 梯度::Tier_A_掌握核心
+Jarisch-Herxheimer reaction	赫氏反应	药理学考研 单元::Unit13 梯度::Tier_A_掌握核心
+Methicillin-resistant Staphylococcus aureus (MRSA)	耐甲氧西林金黄色葡萄球菌	药理学考研 单元::Unit13 梯度::Tier_A_掌握核心
+Chemotherapeutic index (CI)	化疗指数	药理学考研 单元::Unit13 梯度::Tier_B_熟悉重点
+Antibacterial spectrum	抗菌谱	药理学考研 单元::Unit13 梯度::Tier_B_熟悉重点
+Minimum inhibitory / bactericidal concentration (MIC / MBC)	最低抑菌浓度 / 最低杀菌浓度	药理学考研 单元::Unit13 梯度::Tier_B_熟悉重点
+Post-antibiotic effect (PAE)	抗生素后效应	药理学考研 单元::Unit13 梯度::Tier_B_熟悉重点
+Superinfection	二重感染（菌群交替症）	药理学考研 单元::Unit13 梯度::Tier_B_熟悉重点
+First exposure effect (FEE)	首次接触效应	药理学考研 单元::Unit14 梯度::Tier_A_掌握核心
+Red man syndrome	红人综合征	药理学考研 单元::Unit14 梯度::Tier_B_熟悉重点
+Gray baby syndrome	灰婴综合征	药理学考研 单元::Unit14 梯度::Tier_B_熟悉重点
+Multidrug-resistant tuberculosis (MDR-TB)	耐多药结核病	药理学考研 单元::Unit15 梯度::Tier_B_熟悉重点
+Cell cycle non-specific agents (CCNSA)	细胞周期非特异性药物	药理学考研 单元::Unit16 梯度::Tier_S_考纲明牌
+Cell cycle specific agents (CCSA)	细胞周期特异性药物	药理学考研 单元::Unit16 梯度::Tier_S_考纲明牌
+Multidrug resistance (MDR)	多药耐药性	药理学考研 单元::Unit16 梯度::Tier_A_掌握核心
