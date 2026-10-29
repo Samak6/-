@@ -224,6 +224,45 @@
     resize: none;
     outline: none;
   }
+
+  /* 试卷拖拽与文件载入增强 */
+  .panel-left.drag-active {
+    outline: 2px dashed var(--accent) !important;
+    outline-offset: -3px;
+    background: rgba(88, 166, 255, 0.06) !important;
+  }
+  .drag-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(13, 17, 23, 0.88);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    border: 3px dashed var(--accent);
+  }
+  .drag-overlay.active {
+    display: flex;
+  }
+  .drag-overlay-box {
+    text-align: center;
+    color: var(--text-strong);
+    padding: 36px 54px;
+    background: var(--panel-elevated);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+    animation: bounce 0.6s ease infinite alternate;
+  }
+  @keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-8px); }
+  }
   .paper-preview {
     flex: 1;
     padding: 18px 22px;
@@ -1038,6 +1077,15 @@
     </div>
   </header>
 
+  <!-- 全屏拖拽考卷指示蒙层 -->
+  <div id="dragOverlay" class="drag-overlay">
+    <div class="drag-overlay-box">
+      <div style="font-size:42px; margin-bottom:12px;">📥</div>
+      <div style="font-size:18px; font-weight:600; margin-bottom:8px;">释放考卷文件 (.md / .txt)</div>
+      <div style="font-size:13px; color:var(--text-muted);">自动解析考卷、载入试卷阅读视窗并开启 35 分钟模考</div>
+    </div>
+  </div>
+
   <!-- ==================== 模式一：实战作答台 ==================== -->
   <div class="container" id="examViewContainer" style="display:none;">
 
@@ -1047,11 +1095,13 @@
         <span>试卷视窗</span>
         <div class="panel-bar-tools">
           <button class="btn btn-accent" style="padding:2px 8px; font-size:11px;" onclick="pastePaperFromClipboard()">📋 一键粘贴并预览</button>
+          <button class="btn" style="padding:2px 8px; font-size:11px;" onclick="triggerPaperFileInput()">📂 导入试卷</button>
+          <input type="file" id="paperFileInput" accept=".md,.txt,.markdown" style="display:none;" onchange="handlePaperFileSelect(event)">
           <button class="btn" style="padding:2px 8px; font-size:11px;" id="viewToggleBtn" onclick="togglePaperMode()">编辑模式</button>
           <button class="btn" style="padding:2px 8px; font-size:11px;" onclick="clearPaper()">清空</button>
         </div>
       </div>
-      <textarea id="paperEditor" class="paper-editor" placeholder="在此处粘贴 AI 出好的试卷 Markdown 文本...&#10;&#10;（推荐直接点击上方【📋 一键粘贴并预览】快速读取剪贴板）" oninput="savePaper(this.value)"></textarea>
+      <textarea id="paperEditor" class="paper-editor" placeholder="在此处粘贴 AI 出好的试卷 Markdown 文本，或直接拖拽考卷文件（.md / .txt）到页面任意位置...&#10;&#10;（支持三种载入方式：① 页面直接拖拽文件；② 点击上方【📂 导入试卷】；③ 点击上方【📋 一键粘贴并预览】）" oninput="savePaper(this.value)"></textarea>
       <div id="paperPreview" class="paper-preview"></div>
     </div>
 
@@ -1185,6 +1235,7 @@ window.addEventListener("DOMContentLoaded", () => {
   renderMCQ();
   loadData();
   initAnnotationView();
+  initDragAndDrop();
 });
 
 // 切换【实战作答台】与【试卷批注复盘】
@@ -1792,16 +1843,110 @@ function checkNewPaperReset(newText) {
   }
 }
 
+function loadPaperText(text, sourceName = "") {
+  if (!text || !text.trim()) {
+    showToast("考卷内容为空，无法加载！");
+    return;
+  }
+  // 若当前在批注复盘模式，拖入或导入新试卷自动切入实战作答台
+  if (appMode !== "exam") {
+    switchAppMode("exam");
+  }
+  checkNewPaperReset(text);
+  document.getElementById("paperEditor").value = text;
+  savePaper(text);
+  isPreview = true;
+  updateViewModeUI();
+
+  const m = text.match(/^#\s*(.+)$/m);
+  const title = m ? m[1].trim() : (sourceName || "考卷");
+  showToast(`📄 考卷《${title}》载入成功！已开启阅读模式`);
+}
+
+function triggerPaperFileInput() {
+  const input = document.getElementById("paperFileInput");
+  if (input) {
+    input.value = "";
+    input.click();
+  }
+}
+
+function handlePaperFileSelect(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  readAndLoadPaperFile(file);
+}
+
+function readAndLoadPaperFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const text = evt.target.result;
+    loadPaperText(text, file.name.replace(/\.[^/.]+$/, ""));
+  };
+  reader.onerror = function() {
+    showToast("读取考卷文件失败，请重试！");
+  };
+  reader.readAsText(file, "UTF-8");
+}
+
+function initDragAndDrop() {
+  let dragCounter = 0;
+  const overlay = document.getElementById("dragOverlay");
+  const panelLeft = document.querySelector(".panel-left");
+
+  // 监听全窗口拖拽事件
+  window.addEventListener("dragenter", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter++;
+    if (overlay) overlay.classList.add("active");
+    if (panelLeft) panelLeft.classList.add("drag-active");
+  });
+
+  window.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer) {
+      e.dataTransfer.dropEffect = "copy";
+    }
+  });
+
+  window.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter--;
+    if (dragCounter <= 0) {
+      dragCounter = 0;
+      if (overlay) overlay.classList.remove("active");
+      if (panelLeft) panelLeft.classList.remove("drag-active");
+    }
+  });
+
+  window.addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter = 0;
+    if (overlay) overlay.classList.remove("active");
+    if (panelLeft) panelLeft.classList.remove("drag-active");
+
+    const dt = e.dataTransfer;
+    if (dt && dt.files && dt.files.length > 0) {
+      const file = dt.files[0];
+      readAndLoadPaperFile(file);
+    } else if (dt) {
+      const text = dt.getData("text/plain");
+      if (text && text.trim()) {
+        loadPaperText(text, "拖拽文本考卷");
+      }
+    }
+  });
+}
+
 async function pastePaperFromClipboard() {
   try {
     const text = await navigator.clipboard.readText();
     if (text && text.trim()) {
-      checkNewPaperReset(text);
-      document.getElementById("paperEditor").value = text;
-      savePaper(text);
-      isPreview = true;
-      updateViewModeUI();
-      showToast("试卷已载入并切换到阅读模式");
+      loadPaperText(text, "剪贴板考卷");
     } else {
       showToast("剪贴板中无内容，请先在聊天窗复制试卷");
     }
