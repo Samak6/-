@@ -355,6 +355,154 @@
     font-size: 13px;
     display: none;
   }
+  /* Collapsible / Hideable UI components */
+  header.header-hidden {
+    display: none !important;
+  }
+  .unit-nav.nav-hidden {
+    display: none !important;
+  }
+  .stats-bar.stats-hidden {
+    display: none !important;
+  }
+  .batch-copy-bar.batch-hidden {
+    display: none !important;
+  }
+
+  /* Floating Control FAB Group (bottom-right) */
+  .mini-fab-group {
+    position: fixed;
+    right: 18px;
+    bottom: 22px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .mini-fab {
+    background: rgba(19, 28, 46, 0.92);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 12.5px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+    backdrop-filter: blur(8px);
+    transition: all 0.15s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+  .mini-fab:hover {
+    background: var(--panel-hover);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+  }
+  .mini-fab.fab-restore {
+    background: rgba(2, 132, 199, 0.95);
+    border-color: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.6);
+    animation: fabPulse 2s infinite ease-in-out;
+  }
+  @keyframes fabPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+    50% { box-shadow: 0 0 22px rgba(56, 189, 248, 0.85); }
+  }
+
+  /* Modal Mask & Settings Card */
+  .modal-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 16px;
+    backdrop-filter: blur(6px);
+  }
+  .modal-mask.open {
+    display: flex;
+  }
+  .modal-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-width: 580px;
+    width: 100%;
+    padding: 22px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .modal-close-btn {
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0 6px;
+    line-height: 1;
+  }
+  .modal-close-btn:hover {
+    color: var(--text);
+  }
+  .preset-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .vis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .vis-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(9, 13, 22, 0.55);
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    transition: all 0.12s ease;
+  }
+  .vis-item:hover {
+    background: var(--panel-hover);
+    border-color: rgba(56, 189, 248, 0.4);
+  }
+  .vis-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--primary);
+  }
 </style>
 </head>
 <body>
@@ -373,6 +521,9 @@
       <button id="modeRecite" onclick="switchMode('recite')">📖 沉浸背题模式</button>
       <button id="toggleBlind" onclick="toggleBlindMode()">🙈 盲刷隐藏选项</button>
       <button class="btn-purple" onclick="toggleMistakeView()">📕 错题本 (<span id="mistakeBadge">0</span>)</button>
+      <button id="btnFoldNav" onclick="toggleNavVisibility()" title="折叠/展开单元考点导航栏">🔼 折叠导航</button>
+      <button id="btnToggleHeader" class="btn-warn" onclick="toggleHeaderVisibility()" title="隐藏吸顶主栏，获得最大刷题视野">👁️ 隐藏顶栏</button>
+      <button onclick="openVisibilityModal()" title="设置界面各组件显示与隐藏">⚙️ 界面显示</button>
     </div>
   </div>
 
@@ -382,7 +533,7 @@
 </header>
 
 <div class="container">
-  <div class="stats-bar">
+  <div class="stats-bar" id="statsBar">
     <div class="stat-item">
       <span>已完成: <strong id="statAnswered">0</strong> / <span id="statTotal">179</span></span>
       <span style="margin-left: 14px;">正确率: <strong id="statAccuracy">0%</strong></span>
@@ -394,7 +545,7 @@
     </div>
   </div>
 
-  <div class="batch-copy-bar">
+  <div class="batch-copy-bar" id="batchCopyBar">
     <span style="color:#c084fc; font-weight:600;">🤖 AI 伴学无漏题复制：</span>
     <span>将当前筛选试题一键复制为无多余空行的严密 Prompt，防大模型吞题漏题：</span>
     <button class="btn-purple" onclick="copyBatchPrompt(10)">复制前 10 题</button>
@@ -403,6 +554,66 @@
   </div>
 
   <div id="questionsContainer" style="margin-top: 16px;"></div>
+</div>
+
+<!-- 悬浮快捷控制与恢复栏 -->
+<div class="mini-fab-group" id="miniFabGroup">
+  <button class="mini-fab fab-restore" id="fabRestoreHeader" onclick="toggleHeaderVisibility()" style="display:none;" title="恢复显示吸顶顶栏">👁️ 展开顶栏</button>
+  <button class="mini-fab" id="fabToggleNav" onclick="toggleNavVisibility()" title="快速折叠/展开单元导航条">🗺️ 单元导航</button>
+  <button class="mini-fab" onclick="toggleImmersivePreset()" title="一键切换极简沉浸做题模式">📱 沉浸模式</button>
+  <button class="mini-fab" onclick="openVisibilityModal()" title="打开界面显示定制面板">⚙️ 显示设置</button>
+  <button class="mini-fab" onclick="window.scrollTo({top:0, behavior:'smooth'})" title="快速返回页面顶部">⬆️ 顶部</button>
+</div>
+
+<!-- 界面元素显隐与沉浸模式设置弹窗 -->
+<div class="modal-mask" id="visibilityModal" onclick="closeVisibilityModal(event)">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>⚙️ 界面显示与沉浸做题设置</h3>
+      <button class="modal-close-btn" onclick="closeVisibilityModal()">&times;</button>
+    </div>
+    
+    <div style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">
+      一键预设方案：
+    </div>
+    <div class="preset-btn-group">
+      <button class="btn-primary" onclick="applyUIPreset('immersive')">📱 极简沉浸 (隐藏全部控制条)</button>
+      <button class="btn-purple" onclick="applyUIPreset('compact')">⚡ 紧凑模式 (隐藏导航与伴学条)</button>
+      <button onclick="applyUIPreset('all')">🌟 完整显示 (所有面板)</button>
+    </div>
+
+    <div style="font-size:12.5px; color:var(--muted); margin-bottom:8px;">
+      自定义模块显隐开关：
+    </div>
+    <div class="vis-grid">
+      <label class="vis-item">
+        <span>📌 吸顶主控栏 (标题/模式切换)</span>
+        <input type="checkbox" id="chk-vis-header" onchange="onVisCheckboxChange()">
+      </label>
+      <label class="vis-item">
+        <span>🗺️ 单元考点导航栏 (8个单元切换)</span>
+        <input type="checkbox" id="chk-vis-unitnav" onchange="onVisCheckboxChange()">
+      </label>
+      <label class="vis-item">
+        <span>📊 做题统计与搜索条</span>
+        <input type="checkbox" id="chk-vis-stats" onchange="onVisCheckboxChange()">
+      </label>
+      <label class="vis-item">
+        <span>🤖 AI 伴学无漏题复制条</span>
+        <input type="checkbox" id="chk-vis-batchcopy" onchange="onVisCheckboxChange()">
+      </label>
+      <label class="vis-item">
+        <span>🙈 盲刷隐藏选项 (仅留题干自测)</span>
+        <input type="checkbox" id="chk-vis-blind" onchange="onVisCheckboxChange()">
+      </label>
+    </div>
+
+    <div style="font-size:12px; color:var(--muted); margin-top:14px; line-height:1.6; border-top:1px dashed var(--border); padding-top:10px;">
+      💡 <strong>防遮挡与随时恢复：</strong><br>
+      • 隐藏吸顶主栏后，页面右下角将常驻浮动药丸按钮 <code>👁️ 展开顶栏</code>，随时点击一键恢复。<br>
+      • 快捷键支持：按键盘 <strong>Esc</strong> 键可快速关闭本面板或切换顶栏显隐。
+    </div>
+  </div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -5185,6 +5396,14 @@ let userAnswers = {}; // questionId -> selectedKey
 let mistakeSet = new Set();
 let starredSet = new Set();
 
+const DEFAULT_UI_VIS = {
+  headerBar: true,
+  unitNav: true,
+  statsBar: true,
+  batchCopyBar: true
+};
+let uiVisibility = Object.assign({}, DEFAULT_UI_VIS);
+
 // Load storage
 try {
   const savedAns = localStorage.getItem('chem_quiz_answers');
@@ -5193,6 +5412,8 @@ try {
   if (savedMistakes) mistakeSet = new Set(JSON.parse(savedMistakes));
   const savedStarred = localStorage.getItem('chem_quiz_starred');
   if (savedStarred) starredSet = new Set(JSON.parse(savedStarred));
+  const savedVis = localStorage.getItem('chem_ui_visibility');
+  if (savedVis) uiVisibility = Object.assign({}, DEFAULT_UI_VIS, JSON.parse(savedVis));
 } catch (e) { console.error(e); }
 
 function saveStorage() {
@@ -5200,6 +5421,7 @@ function saveStorage() {
     localStorage.setItem('chem_quiz_answers', JSON.stringify(userAnswers));
     localStorage.setItem('chem_quiz_mistakes', JSON.stringify(Array.from(mistakeSet)));
     localStorage.setItem('chem_quiz_starred', JSON.stringify(Array.from(starredSet)));
+    localStorage.setItem('chem_ui_visibility', JSON.stringify(uiVisibility));
   } catch(e) {}
 }
 
@@ -5498,8 +5720,141 @@ function renderMathInPage() {
   }
 }
 
+function applyUIVisibility() {
+  const v = uiVisibility;
+  const headerEl = document.getElementById('siteHeader');
+  const navEl = document.getElementById('unitNav');
+  const statsEl = document.getElementById('statsBar');
+  const batchEl = document.getElementById('batchCopyBar');
+  const fabRestore = document.getElementById('fabRestoreHeader');
+  const btnFoldNav = document.getElementById('btnFoldNav');
+  const btnToggleHeader = document.getElementById('btnToggleHeader');
+
+  if (headerEl) {
+    headerEl.classList.toggle('header-hidden', !v.headerBar);
+  }
+  if (navEl) {
+    navEl.classList.toggle('nav-hidden', !v.unitNav);
+  }
+  if (statsEl) {
+    statsEl.classList.toggle('stats-hidden', !v.statsBar);
+  }
+  if (batchEl) {
+    batchEl.classList.toggle('batch-hidden', !v.batchCopyBar);
+  }
+
+  if (fabRestore) {
+    fabRestore.style.display = v.headerBar ? 'none' : 'inline-flex';
+  }
+  if (btnFoldNav) {
+    btnFoldNav.innerHTML = v.unitNav ? '🔼 折叠导航' : '🔽 展开导航';
+  }
+  if (btnToggleHeader) {
+    btnToggleHeader.innerHTML = v.headerBar ? '👁️ 隐藏顶栏' : '👁️ 展开顶栏';
+  }
+
+  syncModalCheckboxes();
+}
+
+function toggleHeaderVisibility() {
+  uiVisibility.headerBar = !uiVisibility.headerBar;
+  saveStorage();
+  applyUIVisibility();
+  showToast(uiVisibility.headerBar ? "顶栏已展开" : "顶栏已隐藏（右下角按钮随时恢复）");
+}
+
+function toggleNavVisibility() {
+  uiVisibility.unitNav = !uiVisibility.unitNav;
+  saveStorage();
+  applyUIVisibility();
+  showToast(uiVisibility.unitNav ? "单元考点导航已展开" : "单元考点导航已折叠");
+}
+
+function toggleImmersivePreset() {
+  const isImmersive = !uiVisibility.headerBar && !uiVisibility.unitNav && !uiVisibility.statsBar && !uiVisibility.batchCopyBar;
+  if (isImmersive) {
+    applyUIPreset('all');
+    showToast("已退出沉浸模式，恢复完整界面");
+  } else {
+    applyUIPreset('immersive');
+    showToast("已开启极简沉浸做题模式");
+  }
+}
+
+function applyUIPreset(preset) {
+  if (preset === 'immersive') {
+    uiVisibility.headerBar = false;
+    uiVisibility.unitNav = false;
+    uiVisibility.statsBar = false;
+    uiVisibility.batchCopyBar = false;
+  } else if (preset === 'compact') {
+    uiVisibility.headerBar = true;
+    uiVisibility.unitNav = false;
+    uiVisibility.statsBar = true;
+    uiVisibility.batchCopyBar = false;
+  } else {
+    uiVisibility.headerBar = true;
+    uiVisibility.unitNav = true;
+    uiVisibility.statsBar = true;
+    uiVisibility.batchCopyBar = true;
+  }
+  saveStorage();
+  applyUIVisibility();
+}
+
+function openVisibilityModal() {
+  syncModalCheckboxes();
+  document.getElementById('visibilityModal').classList.add('open');
+}
+
+function closeVisibilityModal(e) {
+  if (e && e.target && e.target !== e.currentTarget && !e.target.classList.contains('modal-close-btn')) return;
+  document.getElementById('visibilityModal').classList.remove('open');
+}
+
+function syncModalCheckboxes() {
+  const chkHeader = document.getElementById('chk-vis-header');
+  const chkNav = document.getElementById('chk-vis-unitnav');
+  const chkStats = document.getElementById('chk-vis-stats');
+  const chkBatch = document.getElementById('chk-vis-batchcopy');
+  const chkBlind = document.getElementById('chk-vis-blind');
+
+  if (chkHeader) chkHeader.checked = !!uiVisibility.headerBar;
+  if (chkNav) chkNav.checked = !!uiVisibility.unitNav;
+  if (chkStats) chkStats.checked = !!uiVisibility.statsBar;
+  if (chkBatch) chkBatch.checked = !!uiVisibility.batchCopyBar;
+  if (chkBlind) chkBlind.checked = !!isBlind;
+}
+
+function onVisCheckboxChange() {
+  uiVisibility.headerBar = document.getElementById('chk-vis-header').checked;
+  uiVisibility.unitNav = document.getElementById('chk-vis-unitnav').checked;
+  uiVisibility.statsBar = document.getElementById('chk-vis-stats').checked;
+  uiVisibility.batchCopyBar = document.getElementById('chk-vis-batchcopy').checked;
+  
+  const blindVal = document.getElementById('chk-vis-blind').checked;
+  if (blindVal !== isBlind) {
+    toggleBlindMode();
+  }
+
+  saveStorage();
+  applyUIVisibility();
+}
+
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('visibilityModal');
+    if (modal && modal.classList.contains('open')) {
+      modal.classList.remove('open');
+    } else {
+      toggleHeaderVisibility();
+    }
+  }
+});
+
 // Startup
 initNav();
+applyUIVisibility();
 renderQuestions();
 </script>
 </body>
