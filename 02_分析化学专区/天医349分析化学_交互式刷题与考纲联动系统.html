@@ -257,57 +257,112 @@
   }
   .opt-item {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 9px 14px;
-    border-radius: 7px;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
     border: 1px solid var(--border);
-    background: rgba(9, 13, 22, 0.4);
+    background: rgba(9, 13, 22, 0.45);
     cursor: pointer;
-    transition: all 0.12s ease;
+    transition: all 0.15s ease;
     user-select: none;
   }
   .opt-item:hover {
     background: var(--panel-hover);
-    border-color: rgba(56, 189, 248, 0.35);
+    border-color: rgba(56, 189, 248, 0.5);
+    transform: translateX(2px);
+  }
+  .opt-indicator {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #475569;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11.5px;
+    font-weight: 800;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+    background: rgba(15, 23, 42, 0.6);
+    color: transparent;
+  }
+  .opt-indicator.indicator-square {
+    border-radius: 5px;
+  }
+  .opt-item:hover .opt-indicator {
+    border-color: var(--primary);
   }
   .opt-key {
     font-weight: 700;
-    min-width: 22px;
+    font-size: 14px;
+    min-width: 20px;
     color: var(--primary);
   }
   .opt-text {
     flex: 1;
-    color: #cbd5e1;
+    color: #e2e8f0;
+    font-size: 13.5px;
+    line-height: 1.55;
   }
   /* Statuses */
+  .opt-item.selected-picked {
+    background: rgba(56, 189, 248, 0.12) !important;
+    border-color: var(--primary) !important;
+  }
+  .opt-item.selected-picked .opt-indicator {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #090d16;
+  }
   .opt-item.selected-correct {
     background: var(--success-bg) !important;
     border-color: var(--success) !important;
     color: #ecfdf5;
+  }
+  .opt-item.selected-correct .opt-indicator {
+    border-color: var(--success);
+    background: var(--success);
+    color: #fff;
   }
   .opt-item.selected-wrong {
     background: var(--danger-bg) !important;
     border-color: var(--danger) !important;
     color: #fef2f2;
   }
+  .opt-item.selected-wrong .opt-indicator {
+    border-color: var(--danger);
+    background: var(--danger);
+    color: #fff;
+  }
   .opt-item.answer-highlight {
     border-color: var(--success) !important;
-    background: rgba(16, 185, 129, 0.08);
+    background: rgba(16, 185, 129, 0.1);
+  }
+  .opt-item.answer-highlight .opt-indicator {
+    border-color: var(--success);
+    color: var(--success);
   }
   .blind-hidden .options-list {
     display: none;
   }
   .blind-placeholder {
     display: none;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.2);
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.7);
     border: 1px dashed var(--border);
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--muted);
     font-size: 13px;
     text-align: center;
     margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .blind-placeholder:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: rgba(56, 189, 248, 0.08);
   }
   .blind-hidden .blind-placeholder {
     display: block;
@@ -5392,9 +5447,11 @@ let currentMode = 'practice'; // 'practice' or 'recite'
 let isBlind = false;
 let currentUnitId = 'ALL';
 let showMistakesOnly = false;
-let userAnswers = {}; // questionId -> selectedKey
+let userAnswers = {}; // questionId -> selectedKey (e.g. 'A' or 'AC')
 let mistakeSet = new Set();
 let starredSet = new Set();
+let submittedMultiSet = new Set();
+let unfoldedBlindCards = new Set();
 
 const DEFAULT_UI_VIS = {
   headerBar: true,
@@ -5412,6 +5469,8 @@ try {
   if (savedMistakes) mistakeSet = new Set(JSON.parse(savedMistakes));
   const savedStarred = localStorage.getItem('chem_quiz_starred');
   if (savedStarred) starredSet = new Set(JSON.parse(savedStarred));
+  const savedMulti = localStorage.getItem('chem_quiz_submitted_multi');
+  if (savedMulti) submittedMultiSet = new Set(JSON.parse(savedMulti));
   const savedVis = localStorage.getItem('chem_ui_visibility');
   if (savedVis) uiVisibility = Object.assign({}, DEFAULT_UI_VIS, JSON.parse(savedVis));
 } catch (e) { console.error(e); }
@@ -5421,6 +5480,7 @@ function saveStorage() {
     localStorage.setItem('chem_quiz_answers', JSON.stringify(userAnswers));
     localStorage.setItem('chem_quiz_mistakes', JSON.stringify(Array.from(mistakeSet)));
     localStorage.setItem('chem_quiz_starred', JSON.stringify(Array.from(starredSet)));
+    localStorage.setItem('chem_quiz_submitted_multi', JSON.stringify(Array.from(submittedMultiSet)));
     localStorage.setItem('chem_ui_visibility', JSON.stringify(uiVisibility));
   } catch(e) {}
 }
@@ -5460,7 +5520,18 @@ function switchMode(m) {
 
 function toggleBlindMode() {
   isBlind = !isBlind;
+  unfoldedBlindCards.clear();
   document.getElementById('toggleBlind').classList.toggle('active', isBlind);
+  renderQuestions();
+  showToast(isBlind ? "已开启盲刷隐藏选项（点击题目占位条可单题临时展开）" : "已退出盲刷模式，选项正常显示");
+}
+
+function toggleCardBlind(qKey) {
+  if (unfoldedBlindCards.has(qKey)) {
+    unfoldedBlindCards.delete(qKey);
+  } else {
+    unfoldedBlindCards.add(qKey);
+  }
   renderQuestions();
 }
 
@@ -5519,43 +5590,79 @@ function renderQuestions() {
   list.forEach(q => {
     const qKey = getQKey(q);
     const card = document.createElement('div');
-    card.className = `q-card ${isBlind ? 'blind-hidden' : ''}`;
+    const isCardBlind = isBlind && !unfoldedBlindCards.has(qKey);
+    card.className = `q-card ${isCardBlind ? 'blind-hidden' : ''}`;
     card.id = 'card_' + qKey;
 
     const userAns = userAnswers[qKey] || '';
-    const isAnswered = Boolean(userAns);
+    const isMulti = (q.type === 'multi' || q.answer.length > 1);
+    const isSubmitted = isMulti ? submittedMultiSet.has(qKey) : Boolean(userAns);
     const isStarred = starredSet.has(qKey);
 
     const isRecite = (currentMode === 'recite');
-    const showExp = isRecite || isAnswered;
+    const showExp = isRecite || isSubmitted;
 
     let optionsHtml = '';
     q.options.forEach(opt => {
       let optClass = 'opt-item';
+      let icon = '';
+      const isPick = userAns.includes(opt.key);
+      const isTarget = q.answer.includes(opt.key);
+
       if (isRecite) {
-        if (q.answer.includes(opt.key)) optClass += ' selected-correct';
-      } else if (isAnswered) {
-        if (userAns === opt.key) {
-          optClass += (q.answer.includes(opt.key)) ? ' selected-correct' : ' selected-wrong';
-        } else if (q.answer.includes(opt.key)) {
-          optClass += ' answer-highlight';
+        if (isTarget) {
+          optClass += ' selected-correct';
+          icon = '✓';
         }
+      } else if (isSubmitted) {
+        if (isPick && isTarget) {
+          optClass += ' selected-correct';
+          icon = '✓';
+        } else if (isPick && !isTarget) {
+          optClass += ' selected-wrong';
+          icon = '✗';
+        } else if (!isPick && isTarget) {
+          optClass += ' answer-highlight';
+          icon = '✓';
+        }
+      } else if (isPick) {
+        optClass += ' selected-picked';
+        icon = '●';
       }
 
       optionsHtml += `
         <div class="${optClass}" onclick="handleSelectOption('${qKey}', '${opt.key}')">
+          <div class="opt-indicator ${isMulti ? 'indicator-square' : ''}">${icon}</div>
           <span class="opt-key">${opt.key}.</span>
           <span class="opt-text">${opt.text}</span>
         </div>
       `;
     });
 
+    let actionBtnHtml = '';
+    if (isMulti && !isRecite && !isSubmitted) {
+      actionBtnHtml = `
+        <div style="margin-top: 12px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+          <button class="btn-primary" onclick="submitMultiAnswer('${qKey}')">✅ 提交本题多选作答</button>
+          <span style="font-size:12px; color:var(--muted);">已选: <strong style="color:var(--primary); font-size:14px;">${userAns || '尚未勾选'}</strong></span>
+        </div>
+      `;
+    } else if (isSubmitted && !isRecite) {
+      const isCorrect = (userAns === q.answer);
+      actionBtnHtml = `
+        <div style="margin-top: 12px; display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+          <button class="btn-warn" style="padding:4px 10px; font-size:12px;" onclick="retryQuestion('${qKey}')">🔄 重做本题</button>
+          <span style="font-size:12.5px;">您的作答: <strong style="color:${isCorrect ? '#4ade80' : '#f87171'}">${userAns}</strong> ${isCorrect ? '✅ 回答正确' : '❌ 回答错误'}</span>
+        </div>
+      `;
+    }
+
     card.innerHTML = `
       <div class="q-header">
         <div class="q-meta">
           <span class="q-badge badge-unit">${q.unitId}-${String(q.num).padStart(2, '0')}</span>
           ${q.tag ? `<span class="q-badge badge-tag">${q.tag}</span>` : ''}
-          ${q.type === 'multi' ? `<span class="q-badge badge-multi">多选</span>` : ''}
+          ${isMulti ? `<span class="q-badge badge-multi">多选题</span>` : ''}
         </div>
         <div class="q-actions">
           <button class="btn-icon ${isStarred ? 'starred' : ''}" onclick="toggleStar('${qKey}')">★ 收藏</button>
@@ -5563,8 +5670,9 @@ function renderQuestions() {
         </div>
       </div>
       <div class="q-stem">${q.stem}</div>
-      <div class="blind-placeholder">🙈 选项已开启盲刷隐藏模式（点击卡片右下角可直接查看解析）</div>
+      <div class="blind-placeholder" onclick="toggleCardBlind('${qKey}')">🙈 盲刷模式进行中，选项已隐藏以训练纯粹记忆提取（👉 点击此处展开选项做题）</div>
       <div class="options-list">${optionsHtml}</div>
+      ${actionBtnHtml}
       <div class="q-explanation ${showExp ? 'visible' : ''}" id="exp_${qKey}">
         <div class="exp-answer">【正确答案】${q.answer}</div>
         <div><strong>【考点解析】</strong>${q.analysis}</div>
@@ -5587,15 +5695,54 @@ function handleSelectOption(qKey, optKey) {
   const q = findQuestion(qKey);
   if (!q) return;
 
-  userAnswers[qKey] = optKey;
-  const isCorrect = (q.answer === optKey || q.answer.includes(optKey));
+  const isMulti = (q.type === 'multi' || q.answer.length > 1);
 
+  if (isMulti) {
+    if (submittedMultiSet.has(qKey)) return;
+    let cur = userAnswers[qKey] || '';
+    if (cur.includes(optKey)) {
+      cur = cur.replace(optKey, '');
+    } else {
+      cur += optKey;
+    }
+    cur = cur.split('').sort().join('');
+    userAnswers[qKey] = cur;
+    saveStorage();
+    renderQuestions();
+  } else {
+    userAnswers[qKey] = optKey;
+    const isCorrect = (q.answer === optKey);
+    if (!isCorrect) {
+      mistakeSet.add(qKey);
+    } else {
+      // If correct
+    }
+    saveStorage();
+    renderQuestions();
+  }
+}
+
+function submitMultiAnswer(qKey) {
+  const q = findQuestion(qKey);
+  if (!q) return;
+  const userAns = userAnswers[qKey] || '';
+  if (!userAns) {
+    showToast("请先选择选项后再提交");
+    return;
+  }
+  submittedMultiSet.add(qKey);
+  const isCorrect = (userAns === q.answer);
   if (!isCorrect) {
     mistakeSet.add(qKey);
-  } else {
-    // if answered correctly, don't necessarily remove unless requested
   }
+  saveStorage();
+  renderQuestions();
+  showToast(isCorrect ? "回答正确！" : "回答有误，已归入错题本");
+}
 
+function retryQuestion(qKey) {
+  delete userAnswers[qKey];
+  submittedMultiSet.delete(qKey);
   saveStorage();
   renderQuestions();
 }
@@ -5603,7 +5750,7 @@ function handleSelectOption(qKey, optKey) {
 function findQuestion(qKey) {
   const [uid, numStr] = qKey.split('_');
   const num = parseInt(numStr, 10);
-  const u = ALL_UNITS.find(unit => unit.id === uid);
+  const u = QUIZ_DATA.find(unit => unit.id === uid);
   if (!u) return null;
   return u.questions.find(q => q.num === num);
 }
@@ -5619,6 +5766,7 @@ function clearMistakes() {
   if (confirm("确定要清空全部做题记录与错题本吗？")) {
     userAnswers = {};
     mistakeSet.clear();
+    submittedMultiSet.clear();
     saveStorage();
     renderQuestions();
     showToast("做题记录与错题本已重置");
@@ -5636,9 +5784,11 @@ function updateStats() {
 
   allQs.forEach(q => {
     const key = getQKey(q);
-    if (userAnswers[key]) {
+    const userAns = userAnswers[key];
+    const isMulti = (q.type === 'multi' || q.answer.length > 1);
+    if (userAns && (!isMulti || submittedMultiSet.has(key))) {
       answeredCount++;
-      if (q.answer === userAnswers[key] || q.answer.includes(userAnswers[key])) {
+      if (q.answer === userAns) {
         correctCount++;
       }
     }
