@@ -838,7 +838,8 @@
 
   /* 遮挡自测模糊模式 */
   body.mask-rubric .rubric-text,
-  body.mask-rubric .essay-kp-cell {
+  body.mask-rubric .essay-kp-cell,
+  body.mask-rubric .std-ans-content {
     filter: blur(6px);
     user-select: none;
     cursor: pointer;
@@ -846,9 +847,158 @@
   }
   body.mask-rubric .rubric-text:hover,
   body.mask-rubric .essay-kp-cell:hover,
+  body.mask-rubric .std-ans-content:hover,
   body.mask-rubric .rubric-text.revealed,
-  body.mask-rubric .essay-kp-cell.revealed {
+  body.mask-rubric .essay-kp-cell.revealed,
+  body.mask-rubric .std-ans-content.revealed {
     filter: none;
+  }
+
+  /* ==================== 新增：「上标答 → 下对照（按小问独立拆开）」清爽大空间布局 ==================== */
+  .subq-list-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px 18px;
+    background: #0d1117;
+  }
+  .subq-unit-card {
+    background: #161b22;
+    border: 1px solid rgba(48, 54, 61, 0.95);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+  }
+  .subq-unit-header {
+    padding: 9px 16px;
+    background: rgba(56, 139, 253, 0.08);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .subq-unit-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #79c0ff;
+  }
+  .subq-unit-score {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* 顶部醒目区：考场标准答案 */
+  .std-ans-banner {
+    padding: 14px 20px;
+    background: linear-gradient(90deg, rgba(46, 160, 67, 0.12) 0%, rgba(22, 27, 34, 0.95) 100%);
+    border-bottom: 1px solid var(--border);
+    border-left: 4px solid #3fb950;
+  }
+  .std-ans-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #7ee787;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .std-ans-content {
+    font-size: 14px;
+    line-height: 1.75;
+    color: #f0f6fc;
+    font-weight: 500;
+    white-space: pre-line;
+  }
+
+  /* 下方宽敞双栏对照：左原答（纯净无插标），右深度剖析 */
+  .compare-split-grid {
+    display: grid;
+    grid-template-columns: 0.95fr 1.25fr;
+    background: #121720;
+  }
+  .col-student-pure {
+    padding: 16px 20px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .col-analysis-spacious {
+    padding: 16px 22px;
+    background: rgba(13, 17, 23, 0.55);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .pure-ans-box {
+    font-size: 14px;
+    line-height: 1.85;
+    color: #e6edf3;
+    background: #0d1117;
+    border: 1px solid rgba(48, 54, 61, 0.85);
+    border-radius: 6px;
+    padding: 14px 16px;
+    min-height: 64px;
+    white-space: pre-wrap;
+  }
+  .diag-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .diag-pill-card {
+    font-size: 13.5px;
+    line-height: 1.65;
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #161b22;
+    color: #e6edf3;
+  }
+  .diag-pill-card.err {
+    border-left: 4px solid #f85149;
+    background: rgba(248, 81, 73, 0.08);
+  }
+  .diag-pill-card.warn {
+    border-left: 4px solid #d29922;
+    background: rgba(210, 153, 34, 0.08);
+  }
+  .diag-pill-card.miss {
+    border-left: 4px solid #ff7b72;
+    border-style: solid dashed solid solid;
+    background: rgba(248, 81, 73, 0.05);
+  }
+  .diag-pill-card.ok {
+    border-left: 4px solid #3fb950;
+    background: rgba(46, 160, 67, 0.07);
+  }
+  .sub-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .sub-input-item {
+    background: rgba(22, 27, 34, 0.65);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sub-input-stem {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #a5d6ff;
+    font-weight: 600;
   }
 
   /* 单选题原位批注网格 */
@@ -1149,15 +1299,17 @@
         <!-- 三、简答题 (20分) -->
         <div class="q-section">
           <div class="q-title">
-            <span>三、简答题</span>
+            <span>三、简答题（自动按小问拆分独立答题区）</span>
             <span class="q-score">2题 · 20分（每题10分）</span>
           </div>
-          <div class="q-input-wrap">
+          <div class="q-input-wrap" id="wrap_saq1">
             <span class="q-input-label" id="label_saq1">第 1 题作答：</span>
+            <div id="subinputs_saq1" class="sub-input-group" style="display:none;"></div>
             <textarea id="ans_saq1" class="text-box" style="height:100px;" oninput="onInput('saq1', this.value)"></textarea>
           </div>
-          <div class="q-input-wrap">
+          <div class="q-input-wrap" id="wrap_saq2">
             <span class="q-input-label" id="label_saq2">第 2 题作答：</span>
+            <div id="subinputs_saq2" class="sub-input-group" style="display:none;"></div>
             <textarea id="ans_saq2" class="text-box" style="height:100px;" oninput="onInput('saq2', this.value)"></textarea>
           </div>
         </div>
@@ -1165,11 +1317,12 @@
         <!-- 四、综合论述题 (24分) -->
         <div class="q-section">
           <div class="q-title">
-            <span>四、综合论述题</span>
+            <span>四、综合论述题（自动按小问拆分独立答题区）</span>
             <span class="q-score">1题 · 24分</span>
           </div>
-          <div class="q-input-wrap">
+          <div class="q-input-wrap" id="wrap_essay">
             <span class="q-input-label" id="label_essay">论述题作答：</span>
+            <div id="subinputs_essay" class="sub-input-group" style="display:none;"></div>
             <textarea id="ans_essay" class="text-box" style="height:150px;" oninput="onInput('essay', this.value)"></textarea>
           </div>
         </div>
@@ -1316,6 +1469,123 @@ function toggleMaskRubric() {
   document.body.classList.toggle("mask-rubric", maskRubric);
 }
 
+// 清洗并剥离行内批注：将考生原话中的胶囊徽标(anno-badge)和漏答长段(anno-miss)抽离到右侧剖析栏，保证左侧原话 100% 纯净易读
+function cleanAndExtractDiagnostics(rawHtml) {
+  if (!rawHtml) return { pureHtml: "（未作答）", diagnostics: [] };
+  const tmp = document.createElement("div");
+  tmp.innerHTML = rawHtml;
+  const diagnostics = [];
+
+  // 1. 抽离所有 anno-miss 块
+  tmp.querySelectorAll(".anno-miss").forEach(el => {
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(".anno-badge").forEach(b => b.remove());
+    let txt = clone.textContent.trim().replace(/^【|】$/g, "").trim();
+    if (txt) diagnostics.push({ type: "miss", text: txt });
+    el.remove();
+  });
+
+  // 2. 抽离所有 anno-badge 胶囊并保留原句的柔和底色/下划线
+  tmp.querySelectorAll(".anno-badge").forEach(el => {
+    let cls = "info";
+    if (el.classList.contains("err")) cls = "err";
+    else if (el.classList.contains("warn")) cls = "warn";
+    else if (el.classList.contains("ok")) cls = "ok";
+    else if (el.classList.contains("miss")) cls = "miss";
+    let txt = el.textContent.trim();
+    if (txt) diagnostics.push({ type: cls, text: txt });
+    el.remove();
+  });
+
+  // 3. 清理空标签
+  tmp.querySelectorAll(".anno-ok, .anno-err, .anno-warn").forEach(el => {
+    if (!el.textContent.trim()) el.remove();
+  });
+
+  let pureHtml = tmp.innerHTML
+    .replace(/^(<br\s*\/?>|\s)+|(<br\s*\/?>|\s)+$/gi, "")
+    .trim();
+  if (!pureHtml || !tmp.textContent.trim()) {
+    pureHtml = "<span style='color:var(--text-muted);'>（本问未作答 / 留白）</span>";
+  }
+  return { pureHtml, diagnostics };
+}
+
+// 清理采分点文本中的分值括号噪音，合成为干净的标准答案
+function cleanRubricToStdText(text) {
+  if (!text) return "";
+  return text
+    .replace(/[（(][^）)]*?(?:\d+(?:\.\d+)?\s*\/\s*\d+|\+\s*\d+|扣\s*\d+|得\s*\d+|考生|未作答|误写)[^）)]*?[）)]/g, "")
+    .replace(/^(?:规范译名|核心条件基准|本质物理意义|核心定义|结构特征|光谱行为|核心现象|诱发原因|物理意义|中英文译名准确|损失能量物理机理|光谱特征核心结论|中文译名正确|采分核心定义|明确耦合对象为|结果为|核心判据公式|典型代表)[：:]\s*/g, "")
+    .trim();
+}
+
+function buildVocabStandardAnswer(v) {
+  if (v.standardAnswer) return v.standardAnswer;
+  const parts = (v.rubric || [])
+    .filter(r => !r.text.includes("严禁混淆"))
+    .map(r => cleanRubricToStdText(r.text))
+    .filter(Boolean);
+  return parts.join("；");
+}
+
+// 将简答/论述的考生原答 HTML 按段落/小问切分，与各小问一一对齐
+function splitAnnotatedBySubQuestions(rawHtml, subCount) {
+  if (!rawHtml) return Array(subCount).fill("");
+  const tmp = document.createElement("div");
+  tmp.innerHTML = rawHtml;
+  const pTags = [...tmp.querySelectorAll("p")];
+  if (pTags.length >= subCount && subCount > 1) {
+    const res = [];
+    for (let i = 0; i < subCount; i++) {
+      if (i < subCount - 1) {
+        res.push(pTags[i].innerHTML);
+      } else {
+        res.push(pTags.slice(i).map(p => p.innerHTML).join("<br>"));
+      }
+    }
+    return res;
+  }
+  const dblSplits = rawHtml.split(/<br\s*\/?>\s*<br\s*\/?>/i).map(s => s.trim()).filter(Boolean);
+  if (dblSplits.length >= subCount && subCount > 1) {
+    const res = [];
+    for (let i = 0; i < subCount; i++) {
+      res.push(i < subCount - 1 ? dblSplits[i] : dblSplits.slice(i).join("<br><br>"));
+    }
+    return res;
+  }
+  const lineSplits = rawHtml.split(/<br\s*\/?>/i).map(s => s.trim()).filter(Boolean);
+  if (lineSplits.length >= subCount && subCount > 1) {
+    const res = [];
+    const per = Math.max(1, Math.floor(lineSplits.length / subCount));
+    for (let i = 0; i < subCount; i++) {
+      if (i < subCount - 1) {
+        res.push(lineSplits.slice(i * per, (i + 1) * per).join("<br>"));
+      } else {
+        res.push(lineSplits.slice(i * per).join("<br>"));
+      }
+    }
+    return res;
+  }
+  const arr = Array(subCount).fill("");
+  arr[0] = rawHtml;
+  return arr;
+}
+
+function renderDiagnosticsHtml(diagnostics, fallbackRubricItem) {
+  const items = [];
+  diagnostics.forEach(d => {
+    const icon = d.type === "err" ? "❌ 错因穿透：" : (d.type === "miss" ? "⭕ 漏答盲区：" : (d.type === "warn" ? "⚠️ 细节打磨：" : "✅ 答题亮点："));
+    items.push(`<div class="diag-pill-card ${d.type}"><strong>${icon}</strong>${escapeHtml(d.text)}</div>`);
+  });
+  if (items.length === 0 && fallbackRubricItem) {
+    const cls = fallbackRubricItem.hit ? "ok" : "err";
+    const icon = fallbackRubricItem.hit ? "✅ 采分诊断：" : "❌ 失分诊断：";
+    items.push(`<div class="diag-pill-card ${cls}"><strong>${icon}</strong>${escapeHtml(fallbackRubricItem.text)}</div>`);
+  }
+  return `<div class="diag-list">${items.join("")}</div>`;
+}
+
 // 渲染整张批注试卷
 function renderAnnotatedPaper(id) {
   currentAnnoId = id;
@@ -1391,7 +1661,7 @@ function renderAnnotatedPaper(id) {
     `);
   }
 
-  // 3. 一、英文专业词汇与名词解释
+  // 3. 一、英文专业词汇与名词解释（上标答 → 下对照）
   const vocabList = (data.vocab || []).filter(v => !onlyMistakes || v.got < v.max);
   if (vocabList.length > 0) {
     const vGot = (data.vocab || []).reduce((acc, cur) => acc + cur.got, 0);
@@ -1399,15 +1669,17 @@ function renderAnnotatedPaper(id) {
     html.push(`
       <div class="anno-sec-block">
         <div class="anno-sec-header">
-          <span class="anno-sec-title">一、英文专业词汇与名词解释（原答划词批注 vs 官方采分基准）</span>
+          <span class="anno-sec-title">一、英文专业词汇与名词解释（上标答 → 下对照：左纯净原话 · 右一针见血剖析）</span>
           <span class="anno-sec-score">本大题得分：${vGot} / ${vMax} 分</span>
         </div>
         ${vocabList.map(v => {
           const isFull = v.got >= v.max;
           const tagsHtml = (v.tags || []).map(t => {
-            const cls = t.includes("满分") ? "good" : (t.includes("二") || t.includes("空白") ? "warn" : "info");
+            const cls = t.includes("满分") || t.includes("✓") ? "good" : (t.includes("二") || t.includes("空白") || t.includes("❌") || t.includes("🚨") ? "warn" : "info");
             return `<span class="q-tag ${cls}">${escapeHtml(t)}</span>`;
           }).join("");
+          const stdAns = buildVocabStandardAnswer(v);
+          const { pureHtml, diagnostics } = cleanAndExtractDiagnostics(v.annotatedHtml);
           return `
             <div class="q-anno-card ${isFull ? 'full-marks' : ''}">
               <div class="q-anno-top">
@@ -1417,21 +1689,21 @@ function renderAnnotatedPaper(id) {
                 </div>
                 <span class="q-score-pill ${isFull ? 'pass' : ''}">得分：${v.got} / ${v.max} 分</span>
               </div>
-              <div class="q-anno-body">
-                <div class="q-col-student">
-                  <div class="col-sub-label"><span>✍️ 考生原始作答与红笔原位批注</span></div>
-                  <div class="student-ans-box">${v.annotatedHtml}</div>
+              <div class="std-ans-banner" onclick="this.querySelector('.std-ans-content').classList.toggle('revealed')">
+                <div class="std-ans-label">
+                  <span>🎯 考场标准答案（先看标答锚定靶心）</span>
+                  <span style="font-weight:normal; color:var(--text-muted); font-size:11px;">点击可切换显隐</span>
                 </div>
-                <div class="q-col-rubric">
-                  <div class="col-sub-label"><span>📌 官方采分要点核对（点击可揭开/遮挡）</span></div>
-                  <div class="rubric-list">
-                    ${(v.rubric || []).map(r => `
-                      <div class="rubric-item ${r.hit ? 'hit' : 'missed'}" onclick="this.querySelector('.rubric-text').classList.toggle('revealed')">
-                        <span class="rubric-icon">${r.hit ? '✅' : '⭕'}</span>
-                        <span class="rubric-text">${escapeHtml(r.text)}</span>
-                      </div>
-                    `).join("")}
-                  </div>
+                <div class="std-ans-content">${escapeHtml(stdAns)}</div>
+              </div>
+              <div class="compare-split-grid">
+                <div class="col-student-pure">
+                  <div class="col-sub-label"><span>✍️ 你的原始作答（仅保留红绿关键词划线）</span></div>
+                  <div class="pure-ans-box">${pureHtml}</div>
+                </div>
+                <div class="col-analysis-spacious">
+                  <div class="col-sub-label"><span>🔍 针对你原话的一针见血剖析</span></div>
+                  ${renderDiagnosticsHtml(diagnostics, (v.rubric && v.rubric[0]) ? { hit: isFull, text: v.rubric.map(r => r.text).join("；") } : null)}
                 </div>
               </div>
             </div>
@@ -1495,7 +1767,7 @@ function renderAnnotatedPaper(id) {
     `);
   }
 
-  // 5. 三、简答题
+  // 5. 三、简答题（按小问独立拆开：上标答 → 下对照）
   const saqList = (data.saq || []).filter(s => !onlyMistakes || s.got < s.max);
   if (saqList.length > 0) {
     const sGot = (data.saq || []).reduce((acc, cur) => acc + cur.got, 0);
@@ -1503,11 +1775,45 @@ function renderAnnotatedPaper(id) {
     html.push(`
       <div class="anno-sec-block">
         <div class="anno-sec-header">
-          <span class="anno-sec-title">三、简答题（逐句红笔批注 vs 官方采分骨架拆解）</span>
+          <span class="anno-sec-title">三、简答题（按小问独立拆开：先看上方标答 · 再看下方左右对照剖析）</span>
           <span class="anno-sec-score">本大题得分：${sGot} / ${sMax} 分</span>
         </div>
         ${saqList.map(s => {
           const isFull = s.got >= s.max;
+          const rubrics = s.rubric || [];
+          const studentChunks = splitAnnotatedBySubQuestions(s.annotatedHtml, Math.max(1, rubrics.length));
+          const subCardsHtml = rubrics.map((r, idx) => {
+            const chunkHtml = r.studentChunkHtml !== undefined ? r.studentChunkHtml : (studentChunks[idx] || "");
+            const { pureHtml, diagnostics } = cleanAndExtractDiagnostics(chunkHtml);
+            const stdText = r.standardAnswer || r.detail || "";
+            const scoreColor = r.hit ? "#7ee787" : "#ff7b72";
+            return `
+              <div class="subq-unit-card">
+                <div class="subq-unit-header">
+                  <span class="subq-unit-title">📌 ${escapeHtml(r.part || `小问 (${idx + 1})`)}</span>
+                  <span class="subq-unit-score" style="color:${scoreColor};">${r.hit ? '✅' : '⭕'} 实得：${escapeHtml(String(r.score))}</span>
+                </div>
+                <div class="std-ans-banner" onclick="this.querySelector('.std-ans-content').classList.toggle('revealed')">
+                  <div class="std-ans-label">
+                    <span>🎯 本问考场标准答案</span>
+                    <span style="font-weight:normal; color:var(--text-muted); font-size:11px;">点击可切换显隐</span>
+                  </div>
+                  <div class="std-ans-content">${escapeHtml(stdText)}</div>
+                </div>
+                <div class="compare-split-grid">
+                  <div class="col-student-pure">
+                    <div class="col-sub-label"><span>✍️ 你的本问作答</span></div>
+                    <div class="pure-ans-box">${pureHtml}</div>
+                  </div>
+                  <div class="col-analysis-spacious">
+                    <div class="col-sub-label"><span>🔍 针对性剖析与物理图像</span></div>
+                    ${renderDiagnosticsHtml(diagnostics, { hit: r.hit, text: r.detail })}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join("");
+
           return `
             <div class="q-anno-card ${isFull ? 'full-marks' : ''}">
               <div class="q-anno-top">
@@ -1515,30 +1821,10 @@ function renderAnnotatedPaper(id) {
                   <span class="q-tag info">${escapeHtml(s.code)}</span>
                   <span>第 ${s.num} 题 · ${escapeHtml(s.question)}</span>
                 </div>
-                <span class="q-score-pill ${isFull ? 'pass' : ''}">得分：${s.got} / ${s.max} 分</span>
+                <span class="q-score-pill ${isFull ? 'pass' : ''}">本大题总分：${s.got} / ${s.max} 分</span>
               </div>
-              <div class="q-anno-body">
-                <div class="q-col-student">
-                  <div class="col-sub-label"><span>✍️ 考生原始作答与红笔原位批注</span></div>
-                  <div class="student-ans-box">${s.annotatedHtml}</div>
-                </div>
-                <div class="q-col-rubric">
-                  <div class="col-sub-label"><span>📌 官方采分骨架逐小项核对</span></div>
-                  <div class="rubric-list">
-                    ${(s.rubric || []).map(r => `
-                      <div class="rubric-item ${r.hit ? 'hit' : 'missed'}" onclick="this.querySelector('.rubric-text').classList.toggle('revealed')">
-                        <span class="rubric-icon">${r.hit ? '✅' : '⭕'}</span>
-                        <div class="rubric-text">
-                          <div style="display:flex; justify-content:space-between; font-weight:700; color:var(--text-strong); margin-bottom:2px;">
-                            <span>${escapeHtml(r.part)}</span>
-                            <span style="color:${r.hit ? '#7ee787' : '#ff7b72'}; font-family:monospace;">实得 ${escapeHtml(r.score)}</span>
-                          </div>
-                          <div>${escapeHtml(r.detail)}</div>
-                        </div>
-                      </div>
-                    `).join("")}
-                  </div>
-                </div>
+              <div class="subq-list-wrap">
+                ${subCardsHtml}
               </div>
             </div>
           `;
@@ -1547,14 +1833,50 @@ function renderAnnotatedPaper(id) {
     `);
   }
 
-  // 6. 四、综合论述题
+  // 6. 四、综合论述题（按小问独立拆开：上标答 → 下对照）
   if (data.essay && (!onlyMistakes || data.essay.got < data.essay.max)) {
     const e = data.essay;
     const isFull = e.got >= e.max;
+    const rows = e.rubricTable || [];
+    const studentChunks = splitAnnotatedBySubQuestions(e.annotatedHtml, Math.max(1, rows.length));
+    const subCardsHtml = rows.map((row, idx) => {
+      const chunkHtml = row.studentChunkHtml !== undefined ? row.studentChunkHtml : (studentChunks[idx] || "");
+      const { pureHtml, diagnostics } = cleanAndExtractDiagnostics(chunkHtml);
+      const isOk = row.status === "ok" || row.status === "良好" || row.got >= row.max * 0.8;
+      const isWarn = row.status === "warn" || (row.got > 0 && !isOk);
+      const scoreColor = isOk ? "#7ee787" : (isWarn ? "#e3b341" : "#ff7b72");
+      const icon = isOk ? "✅" : (isWarn ? "⚠️" : "⭕");
+      return `
+        <div class="subq-unit-card">
+          <div class="subq-unit-header">
+            <span class="subq-unit-title">${icon} ${escapeHtml(row.item || `小问 (${idx + 1})`)}</span>
+            <span class="subq-unit-score" style="color:${scoreColor};">实得：${row.got} / ${row.max} 分</span>
+          </div>
+          <div class="std-ans-banner" onclick="this.querySelector('.std-ans-content').classList.toggle('revealed')">
+            <div class="std-ans-label">
+              <span>🎯 本模块考场标准答案与采分靶心</span>
+              <span style="font-weight:normal; color:var(--text-muted); font-size:11px;">点击可切换显隐</span>
+            </div>
+            <div class="std-ans-content">${escapeHtml(row.standardAnswer || row.keyPoints || "")}</div>
+          </div>
+          <div class="compare-split-grid">
+            <div class="col-student-pure">
+              <div class="col-sub-label"><span>✍️ 你的本模块作答</span></div>
+              <div class="pure-ans-box">${pureHtml}</div>
+            </div>
+            <div class="col-analysis-spacious">
+              <div class="col-sub-label"><span>🔍 针对性剖析与物理图像</span></div>
+              ${renderDiagnosticsHtml(diagnostics, { hit: isOk, text: row.keyPoints })}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
     html.push(`
       <div class="anno-sec-block">
         <div class="anno-sec-header">
-          <span class="anno-sec-title">四、综合论述题（原答诊断 + 分模块采分矩阵）</span>
+          <span class="anno-sec-title">四、综合论述题（按小问独立拆开：先看上方标答 · 再看下方左右对照剖析）</span>
           <span class="anno-sec-score">本大题得分：${e.got} / ${e.max} 分</span>
         </div>
         <div class="q-anno-card ${isFull ? 'full-marks' : ''}">
@@ -1563,38 +1885,10 @@ function renderAnnotatedPaper(id) {
               <span class="q-tag info">${escapeHtml(e.code)}</span>
               <span>${escapeHtml(e.question)}</span>
             </div>
-            <span class="q-score-pill ${isFull ? 'pass' : ''}">得分：${e.got} / ${e.max} 分</span>
+            <span class="q-score-pill ${isFull ? 'pass' : ''}">本大题总分：${e.got} / ${e.max} 分</span>
           </div>
-          <div style="padding:16px 18px; display:flex; flex-direction:column; gap:14px;">
-            <div>
-              <div class="col-sub-label" style="margin-bottom:6px;"><span>✍️ 考生原始作答与红笔原位批注</span></div>
-              <div class="student-ans-box">${e.annotatedHtml}</div>
-            </div>
-            <div>
-              <div class="col-sub-label" style="margin-bottom:6px;"><span>📊 官方分项采分矩阵表（点击右侧采分细则可揭开/遮挡自测）</span></div>
-              <table class="essay-table">
-                <thead>
-                  <tr>
-                    <th style="width:170px;">采分模块</th>
-                    <th style="width:95px; text-align:center;">实得 / 满分</th>
-                    <th>官方核心采分关键词与临床实例（必背靶心）</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(e.rubricTable || []).map(row => {
-                    const color = row.status === 'ok' ? '#7ee787' : (row.status === 'warn' ? '#e3b341' : '#ff7b72');
-                    const icon = row.status === 'ok' ? '✅' : (row.status === 'warn' ? '⚠️' : '⭕');
-                    return `
-                      <tr>
-                        <td style="font-weight:700; color:var(--text-strong);">${icon} ${escapeHtml(row.item)}</td>
-                        <td style="text-align:center; font-family:monospace; font-weight:700; color:${color};">${row.got} / ${row.max}</td>
-                        <td class="essay-kp-cell" onclick="this.classList.toggle('revealed')">${escapeHtml(row.keyPoints)}</td>
-                      </tr>
-                    `;
-                  }).join("")}
-                </tbody>
-              </table>
-            </div>
+          <div class="subq-list-wrap">
+            ${subCardsHtml}
           </div>
         </div>
       </div>
@@ -1958,6 +2252,68 @@ async function pastePaperFromClipboard() {
   }
 }
 
+function renderSubInputsForQuestion(qKey, subList, defaultHeight) {
+  const subWrap = document.getElementById(`subinputs_${qKey}`);
+  const mainBox = document.getElementById(`ans_${qKey}`);
+  if (!subWrap || !mainBox) return;
+
+  if (!subList || subList.length <= 1) {
+    subWrap.style.display = "none";
+    subWrap.innerHTML = "";
+    mainBox.style.display = "block";
+    return;
+  }
+
+  mainBox.style.display = "none";
+  subWrap.style.display = "flex";
+
+  // 从已保存的合并文本中恢复各小问内容
+  const existing = (answers[qKey] || "").trim();
+  const savedMap = {};
+  if (existing) {
+    const regex = /(?:^|\n)\s*[（(](\d+)[)）]\s*([\s\S]*?)(?=(?:\n\s*[（(]\d+[)）])|$)/g;
+    let m;
+    while ((m = regex.exec(existing)) !== null) {
+      savedMap[parseInt(m[1], 10)] = m[2].trim();
+    }
+    if (Object.keys(savedMap).length === 0) {
+      savedMap[1] = existing;
+    }
+  }
+
+  subWrap.innerHTML = subList.map((sub, idx) => {
+    const num = idx + 1;
+    const val = savedMap[num] || "";
+    return `
+      <div class="sub-input-item">
+        <div class="sub-input-stem">${escapeHtml(sub)}</div>
+        <textarea
+          id="ans_${qKey}_sub_${num}"
+          class="text-box"
+          style="height:${defaultHeight}px;"
+          placeholder="在此作答第（${num}）小问..."
+          oninput="onSubInput('${qKey}', ${subList.length})"
+        >${escapeHtml(val)}</textarea>
+      </div>
+    `;
+  }).join("");
+}
+
+function onSubInput(qKey, totalSubs) {
+  const parts = [];
+  for (let i = 1; i <= totalSubs; i++) {
+    const el = document.getElementById(`ans_${qKey}_sub_${i}`);
+    const v = el ? el.value.trim() : "";
+    if (v) {
+      parts.push(`（${i}）${v}`);
+    }
+  }
+  const combined = parts.join("\n");
+  const mainBox = document.getElementById(`ans_${qKey}`);
+  if (mainBox) mainBox.value = combined;
+  onInput(qKey, combined);
+}
+
 function renderPaper(md) {
   const pv = document.getElementById("paperPreview");
   const stems = extractStems(md);
@@ -1973,6 +2329,11 @@ function renderPaper(md) {
   if (saq2Lbl) saq2Lbl.textContent = stems.saq2 ? `2. ${stems.saq2}` : "第 2 题作答：";
   const essayLbl = document.getElementById("label_essay");
   if (essayLbl) essayLbl.textContent = stems.essay ? `1. ${stems.essay}` : "论述题作答：";
+
+  renderSubInputsForQuestion("saq1", stems.saq1Subs, 76);
+  renderSubInputsForQuestion("saq2", stems.saq2Subs, 76);
+  renderSubInputsForQuestion("essay", stems.essaySubs, 88);
+
   if (!md.trim()) {
     pv.innerHTML = "<p style='color:var(--text-muted); padding:20px 0;'>暂无试卷内容。<br><br>👉 点击上方【📋 一键粘贴并预览】直接载入剪贴板中的试卷。</p>";
     return;
@@ -2097,8 +2458,24 @@ function resetTimer() {
   if (appMode === "exam") startTimer();
 }
 
+function parseSubQuestionsFromBlock(blockText) {
+  if (!blockText) return [];
+  const subs = [];
+  const matches = [...blockText.matchAll(/(?:^|\n)\s*([（(]\d+[)）][^\n]*(?:\n(?!\s*[（(]\d+[)）]|\s*\d+\.\s).*)*)/g)];
+  for (const m of matches) {
+    const clean = m[1].replace(/\s+/g, " ").replace(/\*\*/g, "").trim();
+    if (clean) subs.push(clean);
+  }
+  return subs;
+}
+
 function extractStems(txt) {
-  const stems = { vocab1: "", vocab2: "", vocab3: "", vocab4: "", vocab5: "", mcqBlock: "", saq1: "", saq2: "", essay: "" };
+  const stems = {
+    vocab1: "", vocab2: "", vocab3: "", vocab4: "", vocab5: "",
+    mcqBlock: "",
+    saq1: "", saq2: "", essay: "",
+    saq1Subs: [], saq2Subs: [], essaySubs: []
+  };
   if (!txt) return stems;
 
   const vocabSec = txt.match(/###\s*一[、\s].*?\n([\s\S]*?)(?=###\s*二|$)/i);
@@ -2116,15 +2493,23 @@ function extractStems(txt) {
 
   const saqSec = txt.match(/###\s*三[、\s].*?\n([\s\S]*?)(?=###\s*四|$)/i);
   if (saqSec) {
-    const sMatches = [...saqSec[1].matchAll(/^\s*(\d+)\.\s*(.*)$/gm)];
-    if (sMatches[0]) stems.saq1 = sMatches[0][2].trim();
-    if (sMatches[1]) stems.saq2 = sMatches[1][2].trim();
+    const secText = saqSec[1];
+    const qBlocks = [...secText.matchAll(/^\s*(\d+)\.\s*([\s\S]*?)(?=^\s*\d+\.\s|$)/gm)];
+    if (qBlocks[0]) {
+      stems.saq1 = qBlocks[0][2].split("\n")[0].replace(/\*\*/g, "").trim();
+      stems.saq1Subs = parseSubQuestionsFromBlock(qBlocks[0][2]);
+    }
+    if (qBlocks[1]) {
+      stems.saq2 = qBlocks[1][2].split("\n")[0].replace(/\*\*/g, "").trim();
+      stems.saq2Subs = parseSubQuestionsFromBlock(qBlocks[1][2]);
+    }
   }
 
   const essaySec = txt.match(/###\s*四[、\s].*?\n([\s\S]*?)(?=---|#|$)/i);
   if (essaySec) {
     const eLines = essaySec[1].split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("```"));
-    if (eLines[0]) stems.essay = eLines[0].replace(/^1\.\s*/, "").trim();
+    if (eLines[0]) stems.essay = eLines[0].replace(/^1\.\s*/, "").replace(/\*\*/g, "").trim();
+    stems.essaySubs = parseSubQuestionsFromBlock(essaySec[1]);
   }
 
   return stems;
